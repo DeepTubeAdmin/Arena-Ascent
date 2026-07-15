@@ -1,0 +1,16 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 500
+
+[rpc_endpoints]
+arbitrum_one = "${ARBITRUM_ONE_RPC}"
+arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC}"
+
+[etherscan]
+arbitrum_one = { key = "${ARBISCAN_API_KEY}", url = "https://api.arbiscan.io/api" }
+arbitrum_sepolia = { key = "${ARBISCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api" }
