@@ -1,15 +1,15 @@
 # Arena Ascent — Operator Runbook
 
-Everything you need to run a tournament round from start to finish, plus how to
-talk to the contract directly on Arbiscan, what every number means, and how to
-fix the problems that actually come up.
+Everything you need to run a tournament round, handle anything that goes wrong,
+talk to the contract directly on Arbiscan, and understand what every number
+means.
 
-Written for the Arbitrum Sepolia **test** setup. When you move to real money on
-Arbitrum One, the addresses change but the flow is identical.
+Written for the Arbitrum Sepolia **test** setup. On Arbitrum One (real money)
+the addresses change but the flow is identical.
 
 ---
 
-## Your key facts (fill these in / keep handy)
+## Your key facts
 
 | Thing | Value |
 |---|---|
@@ -21,211 +21,252 @@ Arbitrum One, the addresses change but the flow is identical.
 | Backend | `http://localhost:8787` |
 | Frontend | `http://localhost:5173` |
 
-Block explorer for everything below:
-`https://sepolia.arbiscan.io/address/0xBE1E0Dc13Be1CEb1808073a87DEA4D995aFeD4E6`
+Explorer: `https://sepolia.arbiscan.io/address/0xBE1E0Dc13Be1CEb1808073a87DEA4D995aFeD4E6`
 
 ---
 
-## The round lifecycle (memorize this order)
+## The round lifecycle and state machine
 
-A round moves through states in a **strict order**. The contract rejects any
-action that's out of order — that's a safety feature, but it's also the #1
-source of "why did my transaction fail." The state is just a number:
+Each round is a **separate, permanent** record with its own id (1, 2, 3, ...) and
+its own state. A round never "resets" — when one settles, you create a NEW round
+for the next event. States move in a strict order; the contract rejects
+out-of-order actions on purpose.
 
-| State # | Name | What it means | What you can do |
+| State # | Name | Meaning | Legal actions from here |
 |---|---|---|---|
-| `0` | Registration Open | Players can enter | Close registration |
-| `1` | Registration Closed | Entrant list + pool locked | Go live |
-| `2` | Live | The play window; one attempt each | Close window |
-| `3` | Settling | Window shut; review + pick winner | Submit winner |
-| `4` | Settled | Winner set; prize claimable | (winner claims, you withdraw fees) |
-| `5` | Voided | Round cancelled | Everyone refunds in full |
+| `0` | Registration Open | Players can enter | Close registration - **Void** |
+| `1` | Registration Closed | Entrant list + pool locked | Go live - **Void** |
+| `2` | Live | Play window; one attempt each | Close window - **Void** |
+| `3` | Settling | Window shut; review + pick winner | Submit winner - **Void** |
+| `4` | Settled | Winner set; prize claimable | (winner claims, you withdraw fees) — FINAL |
+| `5` | Voided | Round cancelled | Entrants refund in full — FINAL |
 
-You (the owner) drive every transition by hand. The on-screen countdown is
-**informational only** — it does NOT start or stop anything. Reaching zero does
-nothing on its own; you flip the states.
+Two states are terminal: **Settled (4)** and **Voided (5)**. You cannot void a
+Settled round, and you cannot un-void. Everything before Settled can be voided.
+
+The on-screen countdown is **informational only** — it starts and stops nothing.
+You drive every state change by hand.
 
 ---
 
-## Running a round — full click-by-click
+## PART A — The normal ("happy path") round
 
-### 1. Start the system (if not already running)
-See `RESTART_GUIDE.md`. You need: Postgres up, Redis up, backend running,
-frontend running, and MetaMask on Arbitrum Sepolia with your owner wallet.
+### A1. Start the system
+See `RESTART_GUIDE.md`: Postgres up, Redis up, backend running, frontend
+running, MetaMask on Arbitrum Sepolia with your owner wallet.
 
-### 2. Create the round on-chain (Arbiscan)
-The round is born on the contract. Easiest is Arbiscan's Write interface:
-
-1. Go to `<contract>#writeContract`
-2. Click **Connect to Web3**, approve in MetaMask, confirm you're on Arbitrum Sepolia.
-3. Expand **`createRound`** and fill the four inputs (see "createRound inputs" below).
-4. Click **Write**, confirm in MetaMask.
-5. Note the round id — your first round is `1`, second is `2`, and so on.
+### A2. Create the round on-chain (Arbiscan)
+1. `<contract>#writeContract` -> **Connect to Web3** -> MetaMask, owner wallet.
+2. Expand **`createRound`**, fill the four inputs (see "createRound inputs").
+3. **Write** -> confirm. The new round gets the next id automatically.
+4. Confirm the id: read **`nextRoundId`** on `#readContract` — if it now says
+   `3`, the round you just made is `2`.
 
 **createRound inputs, decoded:**
 
-| Field | For an ETH round | Meaning |
+| Field | ETH round value | Meaning |
 |---|---|---|
-| `asset` | `0x0000000000000000000000000000000000000000` | All-zeros = ETH round. For USDC, use the USDC token address instead. |
-| `entryFee` | `1000000000000000` | Fee in the smallest unit. This is **wei** for ETH: `1000000000000000` = 0.001 ETH (15 zeros). For USDC use 6 decimals: `1000000` = 1 USDC. |
-| `registrationDeadline` | `9999999999` | A unix timestamp. Informational only in this contract — a far-future number is fine. |
-| `platformFeeBps` | `0` | `0` means "use the 15% default." Otherwise basis points: `1500` = 15%, `1000` = 10%. Max allowed is `3000` (30%). |
+| `asset` | `0x0000000000000000000000000000000000000000` | All-zeros = ETH round. For a USDC round, use the USDC token address. |
+| `entryFee` | `1000000000000000` | Smallest unit. ETH = wei (18 decimals): `1000000000000000` = 0.001 ETH. USDC (6 decimals): `1000000` = 1 USDC. |
+| `registrationDeadline` | `9999999999` | Unix timestamp; informational here. Far-future is fine. |
+| `platformFeeBps` | `0` | `0` = use 15% default. Else basis points: `1500` = 15%. Max `3000`. |
 
-### 3. Register the round in the console
-The contract knows the round exists; the backend needs to know which **game**
-it runs and when.
+### A3. Register metadata in the console
+Site -> **Operator** -> "Register round metadata": round id, game (Target Rush),
+live start, live end -> **Register round metadata**. Then check the **Arena** page
+shows the round (wait ~10s + refresh if needed).
 
-1. Site → **Operator** tab.
-2. "Register round metadata" form: round id (`1`), game (**Target Rush**),
-   live start (a few min out), live end (~30 min later).
-3. Click **Register round metadata**.
-4. Click back to **Arena** — you should now see the round with its countdown
-   and the entry panel (entry fee, pool, 85% take, 15% fee). If not, wait ~10s
-   and refresh; if still nothing, check the backend terminal for red errors.
+### A4. Registration window
+Entrants use the Arena **Enter** button (an on-chain tx that adds their fee to
+the pool). The backend chain-watcher mirrors entries automatically.
 
-### 4. Registration window
-Players (or you, testing) enter via the Arena page's **Enter** button. Each
-entry is an on-chain transaction that adds the fee to the pool. The backend's
-chain-watcher mirrors entries automatically.
+### A5. Close registration
+Operator -> **Close registration** -> confirm. State `0 -> 1`.
 
-### 5. Close registration
-Operator console → **Close registration** → confirm in MetaMask.
-Moves state `0 → 1`. Locks the entrant list and pool.
+### A6. Go live
+Operator -> **Open window (LIVE)** -> confirm. State `1 -> 2`. The **Play my one
+attempt** button now appears for entrants.
 
-### 6. Go live
-Operator console → **Open window (LIVE)** → confirm.
-Moves state `1 → 2`. The play window is open; the **Play my one attempt**
-button now appears on the Arena page for entrants.
+### A7. Players play
+One attempt each, no replays. Input streams to the backend for authoritative
+scoring.
 
-### 7. Players play
-Each entrant clicks **Play my one attempt**, gets a GET READY gate, then plays.
-**One attempt only** — no replays. Input streams to the backend, which computes
-the authoritative score.
+### A8. Close the window
+Operator -> **Close window (SETTLING)** -> confirm. State `2 -> 3`.
 
-### 8. Close the window
-When the play window is over: Operator console → **Close window (SETTLING)** →
-confirm. Moves state `2 → 3`. No more scores accepted.
+### A9. Review and settle
+1. **Load final leaderboard**.
+2. Check abuse flags (shared-IP hints).
+3. **Review the #1 run's replay** — approve stays locked until you do. Watch for
+   automation red flags.
+4. **Approve** -> two-step confirm -> oracle submits winner on-chain. State
+   `3 -> 4`.
 
-### 9. Review and settle (the mandatory part)
-1. Operator console → **Load final leaderboard**.
-2. Check the abuse flags (shared-IP hints among top finishers).
-3. **Review the #1 run's replay** — the approve button stays locked until you
-   do. Watch for the automation red flags (inhuman reaction consistency,
-   pixel-perfect centering).
-4. **Approve** → two-step confirm. This has the backend's oracle submit the
-   winner on-chain. Moves state `3 → 4` (Settled).
+### A10. Winner claims, THEN you withdraw fees (order matters)
+- Winner: Arena page -> **Claim my prize (85% of pool)**. This pays 85% AND sets
+  aside your 15% fee.
+- You: Operator -> **Withdraw ETH fees** -> your address -> confirm.
 
-### 10. Winner claims, then you withdraw fees (ORDER MATTERS)
-- **The winner claims first**: Arena page → **Claim my prize (85% of pool)**.
-  This pays the winner 85% AND sets aside your 15% fee inside the contract.
-- **Then you withdraw fees**: Operator console → **Withdraw ETH fees** → enter
-  your wallet address → confirm.
+> Fees don't exist to withdraw until the winner claims. Withdraw-first reverts
+> and shows an absurd fee. Claim first, always.
 
-> Fees do NOT exist to withdraw until the winner has claimed. If you try to
-> withdraw first, the contract reverts and MetaMask shows an absurd fee. Claim
-> first, always.
-
-### 11. If something broke: void instead
-At any point before Settled, Operator console → **Void round** → confirm
-(state → `5`). Every entrant can then reclaim their FULL entry fee from the
-Arena page (no fee is taken on a void).
+### A11. Next month
+Create a NEW round (back to A2). The old round stays Settled forever; its results
+remain on-chain and in your database.
 
 ---
 
-## Reading the contract directly on Arbiscan
+## PART B — Voiding a round (when something goes wrong)
 
-Two tabs on your verified contract page:
+Voiding cancels a round and lets every entrant reclaim their **full** entry fee.
+No platform fee is taken on a void. Use it whenever a round shouldn't or can't be
+settled fairly.
 
-- **`#readContract`** — look things up, costs nothing, no wallet needed.
-- **`#writeContract`** — send transactions, needs wallet connected, costs gas.
+### When to void
+- The game broke, lagged, or behaved inconsistently during the window.
+- Scores are unreliable or the leaderboard looks wrong.
+- A determinism mismatch: a replay doesn't reproduce the leaderboard score.
+- Strong evidence the top run is automated/cheated and you can't fairly pick a
+  winner.
+- Too few entrants, a technical failure, or any reason the round is invalid.
+- Anything where refunding everyone is the right, safe outcome.
 
-### Most useful READ functions
+### You can void from states 0, 1, 2, or 3 — NOT from 4 (Settled)
+Once a winner is submitted (Settled), the prize path is committed and void is
+blocked. So if you're going to void, decide **before** you approve a winner.
 
-- **`owner`** — the operator address. Should be your wallet. Owner-only actions
-  fail from any other account.
-- **`oracle`** — the settlement signer (your backend's key on testnet; a Safe
-  multisig in production).
-- **`rounds`** → enter a round id → returns every field of that round. Read the
-  `state` number using the table above. Also shows `asset`, `entryFee`,
-  `prizePool`, `entrantCount`, `winner`, `platformFeeBps`, and whether the prize
-  was claimed / fee collected.
-- **`hasEntered`** → round id + an address → true/false, is that wallet entered.
-- **`feesAccrued`** → an asset address → how much fee is sitting ready to
-  withdraw for that asset (`0x0000...0000` for ETH).
+### How to void
+1. Confirm the round's current state first: `#readContract` -> **`rounds`** ->
+   your round id -> read `state` (must be 0-3).
+2. Operator console -> **Void round** -> confirm the browser warning -> confirm in
+   MetaMask. State `-> 5`.
+   - Or directly on Arbiscan: `#writeContract` -> **`voidRound`** -> enter round
+     id -> Write.
+3. The round is now Voided. Tell your entrants they can refund.
 
-### Decoding the money numbers
+### How refunds work after a void
+Refunds are **pull-based**: the contract doesn't push money out; each entrant
+withdraws their own fee. This is a deliberate safety pattern.
 
-Everything on-chain is in the smallest unit — no decimal points.
+- **Each entrant** goes to the Arena page for that round and clicks
+  **Reclaim my entry fee** -> confirms in MetaMask. They get their FULL entry fee
+  back.
+- Or any entrant can refund directly on Arbiscan: `#writeContract` ->
+  **`refund`** -> enter the round id -> Write (from their own wallet).
+- Each entrant can refund **once**. A second attempt reverts ("refunded").
+- Only actual entrants can refund; non-entrants revert ("not entrant").
 
-- **ETH / wei**: 18 decimals. `1000000000000000` = 0.001 ETH.
-  Quick check: 0.001 ETH has 15 zeros after the 1.
-  `1000000000000000000` (18 zeros) = 1 ETH.
-- **USDC**: 6 decimals. `1000000` = 1 USDC. `25000000` = 25 USDC.
-- **platformFeeBps**: basis points, 1 bp = 0.01%. `1500` = 15%. `10000` = 100%.
-- **The 85/15 split**: winner gets `pool × (10000 − bps) / 10000`; the rest is
-  your fee. With `bps = 1500`: winner 85%, you 15%.
+### Testing the void/refund path solo
+Since you're often both operator and entrant in testing:
+1. Create a round, enter it with your wallet (state 0 -> you're an entrant).
+2. **Void round** (state -> 5).
+3. Arena page -> **Reclaim my entry fee** -> confirm. Your wallet gets the full
+   fee back.
+4. Verify on Arbiscan: read **`rounds`** -> the round shows state `5`; your wallet
+   balance went back up by the entry fee.
+
+### After everyone has refunded
+There's nothing else to do — a voided round is finished. Move on and create a new
+round for a fresh attempt. The contract holds no leftover funds for that round
+once all entrants have refunded (verify with `feesAccrued` = 0 for the asset and
+the round's entrants all refunded).
 
 ---
 
-## Troubleshooting (the problems that actually happened)
+## PART C — Every scenario, and what to do
+
+| Situation | State | What to do |
+|---|---|---|
+| Normal round, clean winner | 3 -> 4 | Review replay -> approve -> winner claims -> you withdraw fees (Part A9-A10). |
+| Game broke mid-window | 2 | **Void** (Part B). Everyone refunds. |
+| Bad/unreliable scores after close | 3 | **Void** before approving. Everyone refunds. |
+| Replay != leaderboard score | 3 | Do NOT approve. **Void** and investigate the determinism break. |
+| Suspected automation on #1 run | 3 | Judgment call: if you can't fairly settle, **void**. Otherwise document why you approved. |
+| Nobody entered / too few | 0-1 | **Void** (or just leave it and create a fresh round later). |
+| Wrong entry fee or settings at creation | 0 | **Void** the misconfigured round, create a new one with correct values. |
+| You already approved but realize there's a problem | 4 | Void is blocked. The winner can still claim. This is why careful review before approving matters — there's no undo after Settled. |
+| Round stuck, MetaMask misbehaving | any | See troubleshooting; usually a nonce/gas issue, not a contract problem. |
+| Want to change the platform fee for one round | 0 (at creation) | Set `platformFeeBps` in `createRound` (e.g. `1000` for 10%). Can't change after creation. |
+
+---
+
+## Reading the contract on Arbiscan
+
+- **`#readContract`** — look things up, free, no wallet needed.
+- **`#writeContract`** — send transactions, wallet + gas required.
+
+### Useful READ functions
+- **`owner`** — should be your wallet. Owner-only actions fail from other accounts.
+- **`oracle`** — settlement signer (backend key on testnet; Safe multisig in prod).
+- **`rounds`** -> round id -> all fields incl. the `state` number, `asset`,
+  `entryFee`, `prizePool`, `entrantCount`, `winner`, `platformFeeBps`, and the
+  claimed/fee-collected flags.
+- **`nextRoundId`** — the id the next created round will get.
+- **`hasEntered`** -> round id + address -> is that wallet entered.
+- **`feesAccrued`** -> asset address (`0x0000...0000` for ETH) -> withdrawable fee.
+
+### Decoding the numbers
+- **ETH / wei** (18 decimals): `1000000000000000` = 0.001 ETH; `1000000000000000000` = 1 ETH.
+- **USDC** (6 decimals): `1000000` = 1 USDC; `25000000` = 25 USDC.
+- **platformFeeBps** (basis points): `1500` = 15%; `1000` = 10%; `10000` = 100%.
+- **85/15 split**: winner = `pool x (10000 - bps) / 10000`; the remainder is your
+  fee. Integer-division dust goes to the fee, so winner + fee = pool exactly.
+
+---
+
+## Troubleshooting
 
 ### "max fee per gas less than block base fee"
-**Benign gas-timing wobble.** MetaMask bid a hair below the network's current
-base fee. The transaction is fine; the bid was just stale.
-- Fix: click the action again. Base fees drift every second; the retry usually
-  clears.
-- If it persists: in the MetaMask popup, open the gas/fee section, pick
-  **Aggressive** (or edit max fee to something comfortably above the base fee,
-  e.g. `50000000` wei). Costs a fraction of a cent in test ETH.
+Benign gas-timing wobble. Retry the action (base fee drifts every second). If it
+persists, in the MetaMask popup pick **Aggressive** gas, or set max fee above the
+base fee (e.g. `50000000` wei). Fractions of a cent in test ETH.
 
 ### MetaMask shows an ABSURD fee (thousands of ETH)
-**This means the transaction would REVERT.** Do not fund it, do not confirm it —
-reject it. The giant number is MetaMask failing to simulate a call the contract
-is rejecting. Almost always one of:
-- **Wrong state** — you're calling an action out of order (e.g. `setLive` while
-  the round is still in state `0`). Read the round's `state` and confirm the
-  action is legal from there.
-- **Withdrawing fees before the winner claimed** — nothing has accrued yet.
-  Have the winner claim first.
-- **Wrong account** — MetaMask is on an account that isn't the owner/oracle for
-  an owner/oracle-only action. Switch to `0x52E5...AE1B`.
+**The transaction would REVERT — reject it, never fund it.** Causes:
+- **Wrong state** — the action is illegal from the round's current state (read
+  `state` and check the legal-actions table).
+- **Withdraw before winner claimed** — nothing accrued yet; claim first.
+- **Wrong account** — MetaMask isn't on the owner/oracle account for an
+  owner/oracle-only action. Switch to `0x52E5...AE1B`.
+- **Voiding/refunding wrong** — e.g. `refund` before the round is Voided, or a
+  non-entrant calling `refund`, or a second refund.
+- **Malformed input** — a typo in a long number or an address.
 
-### Transaction "failed" with a non-`0x` id, or weird estimates on everything
-**Likely MetaMask nonce desync** (its local transaction count drifted out of
-sync after a failed/stuck tx). Fix, and it's safe — does NOT touch funds:
-- MetaMask → **Settings → Advanced → Clear activity tab data** → confirm.
-- Then retry the action. Fee should look normal again.
+### Transaction "failed" with a non-`0x` id, or every estimate looks wrong
+Likely MetaMask **nonce desync**. Fix (safe, doesn't touch funds): MetaMask ->
+**Settings -> Advanced -> Clear activity tab data** -> confirm -> retry.
 
-### An owner-only action fails and state + account both look right
-- Double-check you're on **Arbitrum Sepolia**, not Ethereum mainnet or another
-  network.
-- Try the same call directly from Arbiscan `#writeContract` to isolate whether
-  it's the website or the wallet/network. `createRound` worked there, so most
-  owner actions will too.
+### Owner-only action fails though state + account look right
+Confirm you're on **Arbitrum Sepolia**. Try the call directly on Arbiscan
+`#writeContract` to isolate website vs. wallet. Disconnect/reconnect the wallet
+on the Arbiscan page if the connection is stale.
 
-### Site shows "no round" after you registered it
-- Wait ~10 seconds (the site polls) and refresh.
-- If still empty, the backend probably couldn't read the round from the
-  contract — check the backend terminal for red errors, and confirm your
-  Alchemy RPC URL is correct in `backend/.env`.
+### Site shows "no round" after registering
+Wait ~10s and refresh. If still empty, the backend couldn't read the round —
+check the backend terminal for errors and confirm the Alchemy RPC URL in
+`backend/.env`.
 
-### The game doesn't start when the countdown hits zero
-**Working as designed.** The countdown is informational. You must move the round
-to **Live** (state `2`) via **Open window (LIVE)**. The Play button only appears
-once the contract says the round is Live.
+### Game doesn't start when countdown hits zero
+Working as designed. Move the round to **Live** (state 2) via **Open window
+(LIVE)**. The Play button only shows when the contract says Live.
 
 ### "already entered" / can't play twice
-**Working as designed** — one entry and one attempt per wallet, enforced by the
-backend. To test multiple players you need multiple wallets.
+Working as designed — one entry, one attempt per wallet. Use multiple wallets to
+test multiple players.
+
+### Refund button does nothing / reverts
+- The round must be **Voided** (state 5) for refunds to work. Check `state`.
+- The wallet must be an actual entrant, and must not have already refunded.
 
 ---
 
-## Before real money (do NOT skip — none of these are UI work)
+## Before real money (NOT UI work — do not skip)
 
-1. **Professional smart-contract audit.** Passing tests ≠ audited. Required.
-2. **Legal review** of paid-entry skill contests in your jurisdiction. This can
+1. **Professional smart-contract audit.** Passing tests != audited.
+2. **Legal review** of paid-entry skill contests in your jurisdiction — may
    determine whether/where you can operate at all.
-3. **Move the oracle to a Safe multisig** (`setOracle`) — never a hot key in a
-   `.env` file for production.
-4. Full dress rehearsal on Sepolia, then a tiny-stakes real round on Arbitrum
-   One, verifying the 85/15 math on Arbiscan with real value.
+3. **Move the oracle to a Safe multisig** (`setOracle`); never a hot key in prod.
+4. **Dependency security review** of the backend/frontend before public launch
+   (carefully, not `npm audit fix --force`).
+5. Full Sepolia dress rehearsal, then a tiny-stakes real round on Arbitrum One,
+   verifying the 85/15 math on Arbiscan with real value.
