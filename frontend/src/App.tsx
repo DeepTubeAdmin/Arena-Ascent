@@ -8,6 +8,7 @@ import Countdown from "./components/Countdown";
 import EntryPanel from "./components/EntryPanel";
 import GameShell from "./components/GameShell";
 import Results from "./components/Results";
+import FAQ from "./components/FAQ";
 import AdminPage from "./admin/AdminPage";
 
 export interface RoundInfo {
@@ -33,7 +34,7 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [me, setMe] = useState<{ entered: boolean; session: any } | null>(null);
-  const [view, setView] = useState<"arena" | "admin">("arena");
+  const [view, setView] = useState<"arena" | "faq" | "admin">("arena");
   const [err, setErr] = useState("");
 
   const wrongNetwork = isConnected && chainId !== activeChain.id;
@@ -84,6 +85,7 @@ export default function App() {
         </div>
         <nav>
           <button className="link" onClick={() => setView("arena")}>Arena</button>
+          <button className="link" onClick={() => setView("faq")}>How it works</button>
           <button className="link" onClick={() => setView("admin")}>Operator</button>
         </nav>
         <div className="wallet">
@@ -109,8 +111,11 @@ export default function App() {
 
       {view === "admin" ? (
         <AdminPage authed={authed} round={round} onChanged={refresh} />
+      ) : view === "faq" ? (
+        <FAQ />
       ) : !round ? (
         <main className="hero">
+          <div className="eyebrow">MONTHLY SKILL TOURNAMENT</div>
           <h1>One game. One shot.<br />One winner.</h1>
           <p className="sub">
             A never-before-seen skill game, playable for one 30-minute window each
