@@ -9,7 +9,10 @@ export const activeChain =
 export const wagmiConfig = createConfig({
   chains: [activeChain],
   connectors: [injected()],
-  transports: { [activeChain.id]: http() },
+  transports: {
+    [arbitrum.id]: http(),
+    [arbitrumSepolia.id]: http(),
+  },
 });
 
 export const CONTRACT = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;

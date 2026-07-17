@@ -8,7 +8,14 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "react": ["./node_modules/react"],
+      "react/jsx-runtime": ["./node_modules/react/jsx-runtime"],
+      "react-dom": ["./node_modules/react-dom"],
+      "react-dom/*": ["./node_modules/react-dom/*"]
+    }
   },
   "include": ["src", "../shared"],
   "exclude": ["**/*.test.ts", "**/*.test.tsx"]
