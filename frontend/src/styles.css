@@ -16,7 +16,7 @@
   --gold-bright: #f5b841;    /* reserved: the claim moment only */
   --phosphor: #9bb489;       /* dusty CRT green — LIVE + time only */
   --red: #d96b5d;            /* desaturated warning */
-  --font-display: "VT323", monospace;       /* terminal pixel face — restraint */
+  --font-display: "VT323", monospace;
   --font-body: "IBM Plex Sans", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
 }
@@ -71,7 +71,7 @@ nav { display: flex; gap: 18px; }
 
 /* ---- buttons & links ---- */
 .btn {
-  font-family: var(--font-body); font-weight: 600; letter-spacing: 0.04em;
+  font-family: var(--font-display); letter-spacing: 0.08em;
   background: var(--panel-2); color: var(--text);
   border: 1px solid var(--line-strong); border-radius: 3px;
   padding: 11px 20px; cursor: pointer; font-size: 14px;
@@ -80,7 +80,8 @@ nav { display: flex; gap: 18px; }
 .btn:hover { border-color: var(--gold); }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.45; cursor: default; }
-.btn.big { font-size: 17px; padding: 16px 34px; }
+.btn { font-size: 18px; }
+.btn.big { font-size: 24px; padding: 14px 34px; }
 .btn.warn { border-color: var(--red); color: var(--red); }
 .gold-btn {
   background: var(--gold-bright); color: #221703; border-color: var(--gold-bright);
@@ -89,16 +90,19 @@ nav { display: flex; gap: 18px; }
 .gold-btn:hover { border-color: #ffd77e; background: #ffcf66; }
 .link {
   background: none; border: none; color: var(--dim); cursor: pointer;
-  font-family: var(--font-body); font-size: 14px; text-decoration: none;
-  padding: 4px 2px;
+  font-family: var(--font-display); font-size: 18px; letter-spacing: 0.06em;
+  text-decoration: none; padding: 4px 2px;
 }
 .link:hover { color: var(--text); }
 
-/* ---- hero: vast quiet space, one statement ---- */
-.hero { padding: 140px 0 120px; max-width: 620px; }
+/* ---- landing: the one always-on page — headline, pedestal, countdown, entry ---- */
+.landing { padding: 88px 0 40px; text-align: center; }
+.landing .sub { margin: 0 auto 8px; }
+.landing .countdown { padding: 72px 0 40px; }
+.landing .entry { text-align: left; }
 h1, .page-title {
-  font-family: var(--font-body); font-weight: 600; font-size: 42px;
-  line-height: 1.14; letter-spacing: -0.01em; margin: 0 0 18px;
+  font-family: var(--font-display); font-weight: 400; font-size: 54px;
+  line-height: 1.05; letter-spacing: 0.02em; margin: 0 0 18px;
 }
 .page-title.gold, .gold { color: var(--gold); }
 .sub { color: var(--dim); font-size: 17px; line-height: 1.7; max-width: 52ch; }
@@ -108,8 +112,8 @@ h1, .page-title {
 /* ---- THE SIGNATURE: the countdown, now in terminal pixels ---- */
 .countdown { text-align: center; padding: 96px 0 48px; }
 .countdown-label {
-  font-family: var(--font-display); letter-spacing: 0.5em; font-size: 16px;
-  color: var(--dim); margin-bottom: 18px;
+  font-family: var(--font-display); letter-spacing: 0.5em; font-size: 17px;
+  color: var(--dim); margin-bottom: 16px;
 }
 .countdown-digits {
   font-family: var(--font-display); font-weight: 400;
@@ -131,8 +135,8 @@ h1, .page-title {
 }
 .stat { background: var(--panel); padding: 20px 18px; }
 .stat-label {
-  font-family: var(--font-display); font-size: 14px; color: var(--dim);
-  letter-spacing: 0.18em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: 15px; color: var(--dim);
+  letter-spacing: 0.16em; text-transform: uppercase;
 }
 .stat-value { font-family: var(--font-mono); font-size: 21px; font-weight: 600; margin-top: 8px; }
 .stat-value.gold { color: var(--gold); }
@@ -151,7 +155,7 @@ h1, .page-title {
 
 /* ---- live / game: phosphor marks time ---- */
 .live-badge {
-  display: inline-block; font-family: var(--font-display); font-size: 20px;
+  display: inline-block; font-family: var(--font-display); font-size: 22px;
   color: var(--phosphor); letter-spacing: 0.3em; margin-top: 28px;
   animation: pulse 2.2s ease-in-out infinite;
 }
@@ -167,7 +171,7 @@ h1, .page-title {
 .game-stage { display: flex; flex-direction: column; align-items: center; padding: 28px 0; position: relative; }
 .start-gate {
   position: absolute; inset: 0; display: grid; place-items: center;
-  font-family: var(--font-display); font-size: 54px;
+  font-family: var(--font-display); font-size: 56px;
   letter-spacing: 0.4em; color: var(--phosphor); z-index: 2;
   background: rgba(11, 13, 22, 0.72);
 }
@@ -176,7 +180,7 @@ h1, .page-title {
   display: flex; justify-content: space-between; align-items: baseline;
   padding: 8px 4px;
 }
-.tr-score { font-family: var(--font-display); font-size: 40px; color: var(--gold); }
+.tr-score { font-family: var(--font-display); font-size: 42px; color: var(--gold); }
 .tr-hint { color: var(--dim); font-size: 14px; }
 .tr-canvas {
   width: 100%; aspect-ratio: 1; background: var(--panel);
@@ -196,10 +200,16 @@ h1, .page-title {
   display: block;
   margin: 0 auto 28px;
 }
+/* landing pedestal: centered between headline and sub text */
+.hero-pedestal {
+  width: min(440px, 88vw);
+  margin: 40px auto 36px;
+  display: block;
+}
 .champion-address { color: var(--text); font-size: 18px; margin: 10px 0 4px; }
 .champion-score {
-  font-family: var(--font-display); font-size: 56px; color: var(--gold);
-  margin: 6px 0 26px;
+  font-family: var(--font-display); font-size: 58px;
+  color: var(--gold); margin: 6px 0 26px;
 }
 .results-stage .sub { margin-bottom: 24px; }
 
@@ -207,8 +217,8 @@ h1, .page-title {
 .board { width: 100%; max-width: 640px; margin: 48px auto 0; border-collapse: collapse; }
 .board th, .board td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); }
 .board th {
-  font-family: var(--font-display); color: var(--dim); font-size: 14px;
-  letter-spacing: 0.22em; text-transform: uppercase; font-weight: 400;
+  font-family: var(--font-display); color: var(--dim); font-size: 15px;
+  letter-spacing: 0.2em; text-transform: uppercase; font-weight: 400;
 }
 .board tr.first td { color: var(--gold); font-weight: 600; }
 
@@ -217,8 +227,9 @@ h1, .page-title {
 .faq .page-title { margin-bottom: 40px; }
 .faq-section { margin-bottom: 44px; }
 .faq-section h2 {
-  font-family: var(--font-body); font-weight: 600; font-size: 20px;
-  margin-bottom: 12px; padding-top: 18px; border-top: 1px solid var(--line);
+  font-family: var(--font-display); font-weight: 400; font-size: 26px;
+  letter-spacing: 0.04em; margin-bottom: 12px; padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 .faq-section p { color: var(--dim); font-size: 15.5px; line-height: 1.75; margin-bottom: 12px; }
 .faq-section p b { color: var(--text); font-weight: 600; }
@@ -235,10 +246,7 @@ h1, .page-title {
   background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
   padding: 24px; margin: 24px 0;
 }
-.admin h2 {
-  font-family: var(--font-display); font-size: 22px; letter-spacing: 0.12em;
-  margin-bottom: 12px; font-weight: 400;
-}
+.admin h2 { font-family: var(--font-display); font-size: 24px; letter-spacing: 0.1em; margin-bottom: 12px; font-weight: 400; }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
 .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .form-row input, .form-row select {
@@ -270,7 +278,7 @@ h1, .page-title {
 
 /* ---- responsive ---- */
 @media (max-width: 640px) {
-  h1, .page-title { font-size: 30px; }
+  h1, .page-title { font-size: 38px; }
   .hero { padding: 88px 0 72px; }
   .topbar { flex-wrap: wrap; }
   .champion-score { font-size: 44px; }

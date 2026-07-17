@@ -9,6 +9,7 @@ import EntryPanel from "./components/EntryPanel";
 import GameShell from "./components/GameShell";
 import Results from "./components/Results";
 import FAQ from "./components/FAQ";
+import HeroPedestal from "./components/HeroPedestal";
 import AdminPage from "./admin/AdminPage";
 
 export interface RoundInfo {
@@ -113,20 +114,21 @@ export default function App() {
         <AdminPage authed={authed} round={round} onChanged={refresh} />
       ) : view === "faq" ? (
         <FAQ />
-      ) : !round ? (
-        <main className="hero">
-          <div className="eyebrow">MONTHLY SKILL TOURNAMENT</div>
+      ) : !round || round.state === RoundState.RegistrationOpen || round.state === RoundState.RegistrationClosed ? (
+        <main className="landing">
           <h1>One game. One shot.<br />One winner.</h1>
+          <HeroPedestal />
           <p className="sub">
             A never-before-seen skill game, playable for one 30-minute window each
             month. Highest score takes the pool. The next round hasn't been
             announced yet — check back soon.
           </p>
-        </main>
-      ) : round.state === RoundState.RegistrationOpen || round.state === RoundState.RegistrationClosed ? (
-        <main>
-          <Countdown target={round.liveStart} label="THE WINDOW OPENS IN" />
-          <EntryPanel round={round} me={me} authed={authed} onEntered={refresh} />
+          {round && (
+            <>
+              <Countdown target={round.liveStart} label="THE WINDOW OPENS IN" />
+              <EntryPanel round={round} me={me} authed={authed} onEntered={refresh} />
+            </>
+          )}
         </main>
       ) : round.state === RoundState.Live ? (
         <GameShell round={round} me={me} authed={authed} onDone={refresh} />
