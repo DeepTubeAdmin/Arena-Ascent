@@ -1,0 +1,9 @@
+{
+  "name": "arena-ascent",
+  "private": true,
+  "engines": { "node": "20.x" },
+  "scripts": {
+    "build": "cd backend && npm install",
+    "start": "cd backend && npx tsx src/index.ts"
+  }
+}
