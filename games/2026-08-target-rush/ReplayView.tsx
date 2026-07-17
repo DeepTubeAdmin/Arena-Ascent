@@ -68,7 +68,7 @@ export default function TargetRushReplay({ artifact }: { artifact: ReplayArtifac
   useEffect(() => {
     if (!playing) return;
     const interval = setInterval(() => {
-      setStep((s) => {
+      setStep((s: number) => {
         const next = s + speed;
         if (next >= TOTAL_STEPS) {
           setPlaying(false);
@@ -128,12 +128,12 @@ export default function TargetRushReplay({ artifact }: { artifact: ReplayArtifac
         {analysis.flags.length === 0 ? (
           <span className="flag ok">No automation red flags · mean reaction {analysis.mean.toFixed(0)}ms · stdev {analysis.stdev.toFixed(0)}ms</span>
         ) : (
-          analysis.flags.map((f) => <span key={f} className="flag bad">⚠ {f}</span>)
+          analysis.flags.map((f: string) => <span key={f} className="flag bad">⚠ {f}</span>)
         )}
       </div>
       <canvas ref={canvasRef} width={640} height={640} className="replay-canvas" />
       <div className="replay-controls">
-        <button onClick={() => setPlaying((p) => !p)}>{playing ? "Pause" : "Play"}</button>
+        <button onClick={() => setPlaying((p: boolean) => !p)}>{playing ? "Pause" : "Play"}</button>
         <input
           type="range" min={0} max={TOTAL_STEPS} value={step}
           onChange={(e) => { setPlaying(false); setStep(Number(e.target.value)); }}
