@@ -12,7 +12,7 @@ export const wagmiConfig = createConfig({
     // metaMask() gracefully handles the not-installed case (its own modal /
     // redirect to the extension). injected() stays as a fallback for other
     // in-browser wallets a user might already have.
-    metaMask({ dapp: { name: "Arena Ascent" } }),
+    metaMask(),
     injected(),
   ],
   transports: {
