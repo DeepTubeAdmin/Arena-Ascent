@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useWriteContract, usePublicClient } from "wagmi";
 import { parseAbi } from "viem";
 import { CONTRACT } from "../lib/wagmi";
+import { getFeeOverrides, friendlyTxError } from "../lib/txFees";
 import { api } from "../lib/api";
 import type { RoundInfo } from "../App";
 import type { ReplayArtifact } from "../../../shared/types";
@@ -44,15 +45,25 @@ export default function AdminPage({
   if (!authed) return <main><div className="banner">Sign in with an operator wallet to use the console.</div></main>;
 
   async function ownerTx(fn: string, args: unknown[]) {
-    setMsg(`Sending ${fn}…`);
-    const hash = await writeContractAsync({ address: CONTRACT, abi: ownerAbi, functionName: fn as any, args: args as any });
-    await publicClient!.waitForTransactionReceipt({ hash });
-    setMsg(`${fn} confirmed: ${hash.slice(0, 14)}…`);
+    try {
+      setMsg(`Sending ${fn}…`);
+      const hash = await writeContractAsync({
+        address: CONTRACT, abi: ownerAbi, functionName: fn as any, args: args as any,
+        ...(await getFeeOverrides(publicClient)),
+      });
+      await publicClient!.waitForTransactionReceipt({ hash });
+      setMsg(`${fn} confirmed: ${hash.slice(0, 14)}…`);
+      return true;
+    } catch (e: any) {
+      setMsg(`${fn} failed: ${friendlyTxError(e)}`);
+      return false;
+    }
   }
 
   async function transition(fn: "closeRegistration" | "setLive" | "closeWindow" | "voidRound", state: number) {
     if (!round) return;
-    await ownerTx(fn, [BigInt(round.roundId)]);
+    const ok = await ownerTx(fn, [BigInt(round.roundId)]);
+    if (!ok) return; // on-chain tx failed — do NOT mirror the state to the backend
     await api.adminSetState(round.roundId, state);
     onChanged();
   }

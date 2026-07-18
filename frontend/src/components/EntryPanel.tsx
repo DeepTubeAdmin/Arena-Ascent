@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useWriteContract, usePublicClient, useAccount } from "wagmi";
 import { formatUnits, zeroAddress } from "viem";
 import { CONTRACT, USDC, arenaAbi, erc20Abi } from "../lib/wagmi";
+import { getFeeOverrides, friendlyTxError } from "../lib/txFees";
 import type { RoundInfo } from "../App";
 import { RoundState } from "../../../shared/types";
 
@@ -45,6 +46,7 @@ export default function EntryPanel({
         if (allowance < fee) {
           const hash = await writeContractAsync({
             address: USDC, abi: erc20Abi, functionName: "approve", args: [CONTRACT, fee],
+            ...(await getFeeOverrides(publicClient)),
           });
           await publicClient!.waitForTransactionReceipt({ hash });
         }
@@ -54,13 +56,14 @@ export default function EntryPanel({
         address: CONTRACT, abi: arenaAbi, functionName: "enter",
         args: [BigInt(round.roundId)],
         value: isEth ? fee : 0n,
+        ...(await getFeeOverrides(publicClient)),
       });
       await publicClient!.waitForTransactionReceipt({ hash });
       setStatus("done");
       onEntered();
     } catch (e: any) {
       setStatus("error");
-      setErr(e.shortMessage ?? e.message);
+      setErr(friendlyTxError(e));
     }
   }
 

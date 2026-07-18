@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useWriteContract, usePublicClient } from "wagmi";
 import { CONTRACT, arenaAbi } from "../lib/wagmi";
+import { getFeeOverrides, friendlyTxError } from "../lib/txFees";
 import { api } from "../lib/api";
 import type { RoundInfo } from "../App";
 import { RoundState } from "../../../shared/types";
@@ -64,12 +65,13 @@ export default function Results({ round, address }: { round: RoundInfo; address?
         address: CONTRACT, abi: arenaAbi,
         functionName: voided ? "refund" : "claimPrize",
         args: [BigInt(round.roundId)],
+        ...(await getFeeOverrides(publicClient)),
       });
       await publicClient!.waitForTransactionReceipt({ hash });
       setClaimState("claimed");
     } catch (e: any) {
       setClaimState("error");
-      setErr(e.shortMessage ?? e.message);
+      setErr(friendlyTxError(e));
     }
   }
 
