@@ -40,18 +40,34 @@ export interface RushState {
 
 const COMBO_CAP = 10;
 
-/** Precompute the full target schedule for a seed. Same seed → same schedule. */
+/** Precompute the full target schedule for a seed. Same seed → same schedule.
+    DIFFICULTY RAMP: the game starts forgiving and escalates continuously —
+    targets get smaller, live shorter, and arrive faster as time progresses.
+    Early targets sort casual players; late targets separate the elite.
+    All integer math; progress is measured in thousandths of the game. */
 export function buildTargets(seed: string): Target[] {
   const rng = makePRNG("target-rush:" + seed);
   const targets: Target[] = [];
   let step = randInt(rng, 20, 45); // first spawn ~0.3–0.7s in
   while (step < TOTAL_STEPS) {
-    const lifetime = randInt(rng, 45, 80); // 0.72s – 1.28s on screen
-    const r = randInt(rng, 34, 64);
+    // 0 → 1000 as the game progresses (integer thousandths)
+    const prog = Math.floor((step * 1000) / TOTAL_STEPS);
+    // lifetime: 45–80 steps early → 20–32 steps late (0.72–1.28s → 0.32–0.51s)
+    const lifeMin = 45 - Math.floor((prog * 25) / 1000);
+    const lifeMax = 80 - Math.floor((prog * 48) / 1000);
+    // radius: 34–64 early → 18–30 late (big easy discs → small precise dots)
+    const rMin = 34 - Math.floor((prog * 16) / 1000);
+    const rMax = 64 - Math.floor((prog * 34) / 1000);
+    // gap between targets: 12–28 steps early → 6–12 late (relentless endgame)
+    const gapMin = 12 - Math.floor((prog * 6) / 1000);
+    const gapMax = 28 - Math.floor((prog * 16) / 1000);
+
+    const lifetime = randInt(rng, lifeMin, lifeMax);
+    const r = randInt(rng, rMin, rMax);
     const x = randInt(rng, 80, ARENA - 80);
     const y = randInt(rng, 80, ARENA - 80);
     targets.push({ spawnStep: step, despawnStep: step + lifetime, x, y, r });
-    step += lifetime + randInt(rng, 10, 28); // gap before the next target
+    step += lifetime + randInt(rng, gapMin, gapMax);
   }
   return targets;
 }
@@ -121,9 +137,12 @@ export function stepState(
       const dx = x - t.x;
       const dy = y - t.y;
       if (dx * dx + dy * dy <= t.r * t.r) {
-        // HIT: base 100 + speed bonus (2/step of remaining lifetime) + combo bonus
+        // HIT: base 100 + speed bonus (2/step of remaining lifetime)
+        //      + combo bonus + difficulty bonus (late targets pay more —
+        //      up to +200 at the very end of the ramp)
         const remaining = t.despawnStep - step;
-        state.score += 100 + remaining * 2 + state.combo * 10;
+        const prog = Math.floor((step * 1000) / TOTAL_STEPS);
+        state.score += 100 + remaining * 2 + state.combo * 10 + Math.floor(prog / 5);
         state.hits += 1;
         state.combo = Math.min(state.combo + 1, COMBO_CAP);
         state.resolved[idx] = 1;

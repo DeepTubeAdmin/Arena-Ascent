@@ -11,9 +11,14 @@ function sign(payload: string): string {
   return createHmac("sha256", config.jwtSecret).update(payload).digest("hex");
 }
 
-export function sessionSeed(roundId: string, address: string): string {
-  // Deterministic per entrant, unpredictable without the server secret.
-  return sign(`seed:${roundId}:${address}`).slice(0, 32);
+export function sessionSeed(roundId: string, _address: string): string {
+  // ONE shared seed per ROUND: every entrant plays the exact same game —
+  // identical spawn schedule, identical difficulty curve. This is a core
+  // fairness requirement (and strengthens the skill-contest posture: no
+  // player gets a "luckier" layout). Derived from the server secret so it's
+  // unpredictable before the round goes live. The address parameter is
+  // intentionally unused (kept for call-site compatibility).
+  return sign(`seed:${roundId}`).slice(0, 32);
 }
 
 export async function issuePlayToken(roundId: string, address: string) {

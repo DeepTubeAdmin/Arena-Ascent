@@ -22,11 +22,50 @@ This determinism is what makes three things possible at once:
   cheating client can't submit a fake score (the score is *derived*, never *trusted*).
 - **Replay** — the operator re-runs the winning session from stored data before
   paying out.
-- **Fairness** — every entrant plays a game generated from a seed, reproducible and
-  auditable.
+- **Fairness** — every entrant in a round plays the SAME game from one shared
+  seed, reproducible and auditable. Skill is the only differentiator.
 
 If determinism breaks, scoring and replay both break. Everything below exists to
 protect it.
+
+---
+
+## Non-negotiable game design requirements
+
+Every monthly game must satisfy ALL of these. They are product requirements and
+legal-posture requirements, not suggestions.
+
+1. **Identical game for every player.** The platform issues ONE shared seed per
+   round. Every entrant faces the exact same layout, spawn schedule, and events.
+   There is no per-player randomness of any kind: if a zombie spawns at (312, 87)
+   at t=14.2s, it spawns there for every single player. Outcome differences
+   between players must come from player skill alone, never from layout luck.
+   (Anti-spoiler note: the shared seed is why the live window is short and
+   simultaneous — everyone plays at once, so an early finisher can't tip off
+   later players.)
+
+2. **Quick to play: ~10 minutes maximum, shorter preferred.** One attempt should
+   fit comfortably in the live window with room for stragglers. 30 seconds to a
+   few minutes is the sweet spot.
+
+3. **Escalating difficulty curve.** The game starts slow and forgiving, then
+   grows relentlessly harder as it progresses — smaller targets, faster spawns,
+   shorter reaction windows, quicker enemies, tighter timing. Difficulty should
+   feel roughly exponential: the opening minutes are playable by anyone; the
+   final stretch should be survivable only by the genuinely skilled.
+
+4. **The curve must differentiate skill.** The point of the ramp is separation:
+   casual players top out early, good players last longer, and the best players
+   distinguish themselves at the extreme end. Avoid designs where scores bunch
+   together (score caps, flat difficulty, luck-dominated bonuses). Late-game
+   performance should be worth MORE than early-game performance in scoring, so
+   surviving the escalation is what wins.
+
+5. **No chance elements affecting outcomes.** Randomness may only be used at
+   generation time, derived entirely from the shared seed (e.g., precomputing a
+   spawn schedule). Never mid-run randomness that differs between players, and
+   never chance-based rewards (random loot, critical hits, lucky multipliers).
+   Same inputs at the same times → same result, for everyone, always.
 
 ---
 
