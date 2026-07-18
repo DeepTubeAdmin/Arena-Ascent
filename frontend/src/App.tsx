@@ -9,6 +9,7 @@ import EntryPanel from "./components/EntryPanel";
 import GameShell from "./components/GameShell";
 import Results from "./components/Results";
 import FAQ from "./components/FAQ";
+import Terms from "./components/Terms";
 import HeroPedestal from "./components/HeroPedestal";
 import AdminPage from "./admin/AdminPage";
 
@@ -35,9 +36,16 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [me, setMe] = useState<{ entered: boolean; session: any } | null>(null);
-  const [view, setView] = useState<"arena" | "faq" | "admin">("arena");
+  const [view, setView] = useState<"arena" | "faq" | "terms" | "admin">("arena");
   const [err, setErr] = useState("");
   const [showInstall, setShowInstall] = useState(false);
+
+  // UI-only admin check: show operator tools when the signed-in wallet is in
+  // the admin list. Real enforcement stays server-side (requireAdmin) and
+  // on-chain (onlyOwner) — this just hides the door from regular visitors.
+  const adminList = (import.meta.env.VITE_ADMIN_ADDRESSES ?? "")
+    .split(",").map((a: string) => a.trim().toLowerCase()).filter(Boolean);
+  const isAdmin = Boolean(authed && address && adminList.includes(address.toLowerCase()));
 
   // Is any injected wallet present? (window.ethereum is set by MetaMask etc.)
   function hasWallet(): boolean {
@@ -103,7 +111,9 @@ export default function App() {
         <nav>
           <button className="link" onClick={() => setView("arena")}>Arena</button>
           <button className="link" onClick={() => setView("faq")}>How it works</button>
-          <button className="link" onClick={() => setView("admin")}>Operator</button>
+          {isAdmin && (
+            <button className="link" onClick={() => setView("admin")}>Operator</button>
+          )}
         </nav>
         <div className="wallet">
           {!isConnected ? (
@@ -147,6 +157,8 @@ export default function App() {
         <AdminPage authed={authed} round={round} onChanged={refresh} />
       ) : view === "faq" ? (
         <FAQ />
+      ) : view === "terms" ? (
+        <Terms />
       ) : !round || round.state === RoundState.RegistrationOpen || round.state === RoundState.RegistrationClosed ? (
         <main className="landing">
           <h1>One game. One shot.<br />One winner.</h1>
@@ -173,6 +185,10 @@ export default function App() {
         Entry fees form the prize pool. The winner takes 85%; Arena Ascent retains a
         15% hosting fee. Scores are computed server-side and every winning run is
         human-reviewed before settlement. Voided rounds refund entry fees in full.
+        <div className="foot-links">
+          <button className="link" onClick={() => setView("terms")}>Terms of Service</button>
+          <button className="link" onClick={() => setView("faq")}>How it works</button>
+        </div>
       </footer>
     </div>
   );

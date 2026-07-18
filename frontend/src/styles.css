@@ -297,3 +297,6 @@ h1, .page-title {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 }
 .install-actions .btn { text-decoration: none; display: inline-block; }
+
+/* ---- footer links row ---- */
+.foot-links { margin-top: 14px; display: flex; gap: 20px; }

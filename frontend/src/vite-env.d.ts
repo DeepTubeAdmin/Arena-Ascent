@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_CHAIN: string;
   readonly VITE_CONTRACT_ADDRESS: string;
   readonly VITE_USDC_ADDRESS: string;
+  readonly VITE_ADMIN_ADDRESSES?: string;
 }
 
 interface ImportMeta {
