@@ -184,10 +184,30 @@ function RegisterRoundForm({ onChanged }: { onChanged: () => void }) {
   const [gameId, setGameId] = useState("2026-08-target-rush");
   const [liveStart, setLiveStart] = useState("");
   const [liveEnd, setLiveEnd] = useState("");
+  const [formMsg, setFormMsg] = useState("");
 
   async function submit() {
-    await api.adminRegisterRound({ roundId, gameId, liveStart, liveEnd });
-    onChanged();
+    try {
+      setFormMsg("");
+      if (!roundId || !liveStart || !liveEnd) {
+        setFormMsg("Fill in the round id and BOTH window times.");
+        return;
+      }
+      // datetime-local gives a zone-less string ("2026-07-18T15:30") meaning
+      // YOUR local time. Convert to a proper UTC ISO timestamp so the backend
+      // (running in UTC) stores the moment you actually meant.
+      const startIso = new Date(liveStart).toISOString();
+      const endIso = new Date(liveEnd).toISOString();
+      if (new Date(endIso) <= new Date(startIso)) {
+        setFormMsg("Live end must be after live start.");
+        return;
+      }
+      await api.adminRegisterRound({ roundId, gameId, liveStart: startIso, liveEnd: endIso });
+      setFormMsg(`Round ${roundId} registered ✓`);
+      onChanged();
+    } catch (e: any) {
+      setFormMsg(`Registration failed: ${e.message}`);
+    }
   }
 
   return (
@@ -200,6 +220,7 @@ function RegisterRoundForm({ onChanged }: { onChanged: () => void }) {
       <input type="datetime-local" value={liveStart} onChange={(e) => setLiveStart(e.target.value)} />
       <input type="datetime-local" value={liveEnd} onChange={(e) => setLiveEnd(e.target.value)} />
       <button className="btn" onClick={submit}>Register round metadata</button>
+      {formMsg && <div className="banner">{formMsg}</div>}
     </div>
   );
 }
