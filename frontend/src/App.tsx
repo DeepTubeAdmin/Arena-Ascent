@@ -37,6 +37,22 @@ export default function App() {
   const [me, setMe] = useState<{ entered: boolean; session: any } | null>(null);
   const [view, setView] = useState<"arena" | "faq" | "admin">("arena");
   const [err, setErr] = useState("");
+  const [showInstall, setShowInstall] = useState(false);
+
+  // Is any injected wallet present? (window.ethereum is set by MetaMask etc.)
+  function hasWallet(): boolean {
+    return typeof window !== "undefined" && Boolean((window as any).ethereum);
+  }
+
+  function handleConnect() {
+    if (!hasWallet()) {
+      // No wallet extension at all — guide the newcomer instead of a dead click.
+      setShowInstall(true);
+      return;
+    }
+    setShowInstall(false);
+    connect({ connector: connectors[0] });
+  }
 
   const wrongNetwork = isConnected && chainId !== activeChain.id;
 
@@ -91,7 +107,7 @@ export default function App() {
         </nav>
         <div className="wallet">
           {!isConnected ? (
-            <button className="btn" onClick={() => connect({ connector: connectors[0] })}>
+            <button className="btn" onClick={handleConnect}>
               Connect wallet
             </button>
           ) : wrongNetwork ? (
@@ -109,6 +125,23 @@ export default function App() {
       </header>
 
       {err && <div className="banner error">{err}</div>}
+
+      {showInstall && (
+        <div className="banner install-prompt">
+          <div>
+            <b>You'll need a crypto wallet to play.</b> Arena Ascent uses MetaMask,
+            a free browser extension that lets you sign in and enter rounds. Install
+            it, then come back and click Connect wallet again.
+          </div>
+          <div className="install-actions">
+            <a className="btn gold-btn" href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer">
+              Install MetaMask
+            </a>
+            <button className="link" onClick={() => setShowInstall(false)}>Dismiss</button>
+            <button className="link" onClick={() => setView("faq")}>New to this? Read How it works</button>
+          </div>
+        </div>
+      )}
 
       {view === "admin" ? (
         <AdminPage authed={authed} round={round} onChanged={refresh} />

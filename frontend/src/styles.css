@@ -286,3 +286,14 @@ h1, .page-title {
 
 /* focus visibility on the muted palette */
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---- install-wallet prompt (newcomer guidance) ---- */
+.install-prompt {
+  border-color: var(--gold);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.install-prompt b { color: var(--text); }
+.install-actions {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.install-actions .btn { text-decoration: none; display: inline-block; }

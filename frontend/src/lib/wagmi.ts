@@ -1,6 +1,6 @@
 import { http, createConfig } from "wagmi";
 import { arbitrum, arbitrumSepolia } from "wagmi/chains";
-import { injected } from "wagmi/connectors";
+import { metaMask, injected } from "wagmi/connectors";
 import { parseAbi } from "viem";
 
 export const activeChain =
@@ -8,7 +8,13 @@ export const activeChain =
 
 export const wagmiConfig = createConfig({
   chains: [activeChain],
-  connectors: [injected()],
+  connectors: [
+    // metaMask() gracefully handles the not-installed case (its own modal /
+    // redirect to the extension). injected() stays as a fallback for other
+    // in-browser wallets a user might already have.
+    metaMask({ dapp: { name: "Arena Ascent" } }),
+    injected(),
+  ],
   transports: {
     [arbitrum.id]: http(),
     [arbitrumSepolia.id]: http(),
