@@ -305,3 +305,9 @@ h1, .page-title {
 .board tr.dq td { color: var(--red); text-decoration: line-through; }
 .board tr.dq .dq-tag { text-decoration: none; font-size: 12px; margin-left: 8px; }
 .board tr.dq .link { text-decoration: underline; color: var(--dim); }
+
+/* ---- duck run canvas (16:9 side-scroller) ---- */
+.dr-canvas, .dr-replay {
+  width: min(720px, 92vw); aspect-ratio: 2/1;
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: 4px;
+}

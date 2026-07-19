@@ -2,6 +2,7 @@
 // pipeline (scoring, replay, settlement) be tested with no real game.
 import type { GameModule, InputEvent } from "../../../shared/types";
 import { TargetRushModule } from "../../../games/2026-08-target-rush/module";
+import { DuckRunModule } from "../../../games/2026-09-duck-run/module";
 
 export const StubModule: GameModule = {
   id: "stub",
@@ -18,6 +19,7 @@ export const StubModule: GameModule = {
 const modules: Record<string, GameModule> = {
   [StubModule.id]: StubModule,
   [TargetRushModule.id]: TargetRushModule,
+  [DuckRunModule.id]: DuckRunModule,
 };
 
 export function getGameModule(id: string): GameModule {
