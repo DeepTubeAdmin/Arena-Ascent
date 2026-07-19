@@ -186,21 +186,28 @@ contract ArenaAscent {
 
     // -------------------------------------------------------------- settlement
     /// @notice Oracle submits the winner AFTER off-chain scoring + human replay review.
+    ///         The operator fee accrues HERE, at settlement, so it is withdrawable
+    ///         immediately and independently of when (or whether) the winner claims.
     function submitWinner(uint256 roundId, address winner) external onlyOracle {
         Round storage r = rounds[roundId];
         require(r.state == State.Settling, "not settling");
         require(entered[roundId][winner], "winner not entrant");
         r.winner = winner;
         r.state = State.Settled;
+
+        uint256 pool = r.prizePool;
+        uint256 winnerAmount = (pool * (10000 - r.platformFeeBps)) / 10000;
+        r.feeCollected = true;
+        feesAccrued[r.asset] += pool - winnerAmount;
+
         emit StateChanged(roundId, State.Settling, State.Settled);
         emit WinnerSubmitted(roundId, winner);
     }
 
-    /// @notice Winner pulls (pool - fee). Fee accrues to the operator.
+    /// @notice Winner pulls (pool - fee). The fee was already accrued at
+    ///         settlement (submitWinner); this pays the winner's share only.
     ///         winnerAmount = floor(pool * (10000 - bps) / 10000);
-    ///         fee = pool - winnerAmount. winnerAmount + fee == pool EXACTLY,
-    ///         with integer-division dust accruing to the operator fee, so
-    ///         nothing is ever stuck in the contract.
+    ///         winnerAmount + fee == pool EXACTLY, dust accrues to the fee.
     function claimPrize(uint256 roundId) external nonReentrant {
         Round storage r = rounds[roundId];
         require(r.state == State.Settled, "not settled");
@@ -211,11 +218,6 @@ contract ArenaAscent {
         uint256 pool = r.prizePool;
         uint256 winnerAmount = (pool * (10000 - r.platformFeeBps)) / 10000;
         uint256 fee = pool - winnerAmount;
-
-        if (!r.feeCollected) {
-            r.feeCollected = true;
-            feesAccrued[r.asset] += fee;
-        }
 
         _payout(r.asset, msg.sender, winnerAmount);
         emit PrizeClaimed(roundId, msg.sender, winnerAmount, fee);

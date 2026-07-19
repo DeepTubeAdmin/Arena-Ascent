@@ -117,6 +117,33 @@ contract ArenaAscentTest is Test {
     }
 
     // --------------------------------------------------------- happy paths
+    /// Fee accrues at settlement: operator can withdraw BEFORE the winner
+    /// claims, and the contract stays solvent for the later claim.
+    function test_WithdrawFeesBeforeWinnerClaims() public {
+        uint256 id = _createUsdcRound();
+        _enterUsdc(id, alice);
+        _enterUsdc(id, bob);
+        _toSettling(id);
+
+        vm.prank(oracle);
+        arena.submitWinner(id, alice);
+
+        uint256 pool = uint256(USDC_FEE) * 2;
+        uint256 expectedWinner = (pool * 8500) / 10000;
+        uint256 expectedFee = pool - expectedWinner;
+
+        // Withdraw the fee FIRST — before any claim.
+        arena.withdrawFees(address(usdc), owner);
+        assertEq(usdc.balanceOf(owner), expectedFee, "fee available at settlement");
+
+        // Winner still receives the full 85% afterwards.
+        uint256 before = usdc.balanceOf(alice);
+        vm.prank(alice);
+        arena.claimPrize(id);
+        assertEq(usdc.balanceOf(alice) - before, expectedWinner, "winner unaffected");
+        assertEq(usdc.balanceOf(address(arena)), 0, "solvent: nothing stuck");
+    }
+
     function test_HappyPath_Usdc_85_15() public {
         uint256 id = _createUsdcRound();
         _enterUsdc(id, alice);

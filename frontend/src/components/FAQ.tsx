@@ -75,8 +75,7 @@ export default function FAQ() {
         <h2>What does the winner get?</h2>
         <p>
           The winner receives <b>85% of the prize pool</b>, claimed directly to
-          their wallet. Arena Ascent retains a 15% hosting fee for running the
-          tournament. This split is displayed before you enter — no surprises.
+          their wallet.
         </p>
       </section>
 

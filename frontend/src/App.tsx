@@ -164,9 +164,8 @@ export default function App() {
           <h1>One game. One shot.<br />One winner.</h1>
           <HeroPedestal />
           <p className="sub">
-            A never-before-seen skill game, playable for one 30-minute window each
-            month. Highest score takes the pool. The next round hasn't been
-            announced yet — check back soon.
+            A never-before-seen skill game, playable for one short window each
+            month. Highest score takes the pool.
           </p>
           {round && (
             <>
@@ -182,9 +181,9 @@ export default function App() {
       )}
 
       <footer className="foot">
-        Entry fees form the prize pool. The winner takes 85%; Arena Ascent retains a
-        15% hosting fee. Scores are computed server-side and every winning run is
-        human-reviewed before settlement. Voided rounds refund entry fees in full.
+        Entry fees form the prize pool; the winner takes 85%. Scores are computed
+        server-side and every winning run is human-reviewed before settlement.
+        Voided rounds refund entry fees in full.
         <div className="foot-links">
           <button className="link" onClick={() => setView("terms")}>Terms of Service</button>
           <button className="link" onClick={() => setView("faq")}>How it works</button>

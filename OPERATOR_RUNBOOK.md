@@ -102,13 +102,14 @@ Operator -> **Close window (SETTLING)** -> confirm. State `2 -> 3`.
 4. **Approve** -> two-step confirm -> oracle submits winner on-chain. State
    `3 -> 4`.
 
-### A10. Winner claims, THEN you withdraw fees (order matters)
-- Winner: Arena page -> **Claim my prize (85% of pool)**. This pays 85% AND sets
-  aside your 15% fee.
-- You: Operator -> **Withdraw ETH fees** -> your address -> confirm.
-
-> Fees don't exist to withdraw until the winner claims. Withdraw-first reverts
-> and shows an absurd fee. Claim first, always.
+### A10. Withdraw fees and winner claims (any order)
+As of the settlement-fee contract update, your 15% fee accrues the moment the
+winner is submitted on-chain (A9) — you can withdraw it immediately, whether or
+not the winner has claimed yet.
+- You: Operator -> **Withdraw ETH fees** -> your address -> confirm (any time
+  after settlement).
+- Winner: Arena page -> **Claim my prize (85% of pool)** (any time after
+  settlement).
 
 ### A11. Next month
 Create a NEW round (back to A2). The old round stays Settled forever; its results

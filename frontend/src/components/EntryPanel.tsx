@@ -82,10 +82,6 @@ export default function EntryPanel({
           <div className="stat-label">Winner takes (85%)</div>
           <div className="stat-value">{fmt(winnerTake)} {symbol}</div>
         </div>
-        <div className="stat">
-          <div className="stat-label">Hosting fee (15%)</div>
-          <div className="stat-value dim">{fmt(pool - winnerTake)} {symbol}</div>
-        </div>
       </div>
 
       <p className="entry-note">
