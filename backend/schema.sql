@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS sessions (
   input_log     JSONB  NOT NULL DEFAULT '[]'::jsonb,
   score         BIGINT,                      -- authoritative, set by computeScore
   score_detail  JSONB,
+  disqualified  BOOLEAN NOT NULL DEFAULT FALSE, -- operator DQ (cheating etc.)
+  dq_reason     TEXT,
   UNIQUE (round_id, address)                 -- exactly one attempt
 );
 

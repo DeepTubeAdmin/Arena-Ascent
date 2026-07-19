@@ -83,6 +83,25 @@ export default function AdminPage({
     setReviewedAddress(address);
   }
 
+  async function disqualify(address: string) {
+    if (!round) return;
+    const reason = window.prompt(
+      "Reason for disqualification (recorded for the audit trail):",
+      "Automation red flags in replay review"
+    );
+    if (reason === null) return; // cancelled
+    await api.adminDisqualify(round.roundId, address, reason);
+    setMsg(`Disqualified ${address.slice(0, 10)}… — ${reason}`);
+    await loadBoard();
+  }
+
+  async function reinstate(address: string) {
+    if (!round) return;
+    await api.adminDisqualify(round.roundId, address, undefined, true);
+    setMsg(`Reinstated ${address.slice(0, 10)}…`);
+    await loadBoard();
+  }
+
   async function approve() {
     if (!round) return;
     const result = await api.adminApprove(round.roundId);
@@ -92,7 +111,9 @@ export default function AdminPage({
   }
 
   const ReplayView = round ? REPLAY_VIEWS[round.gameId] : undefined;
-  const topAddress = board[0]?.address;
+  // The approve target is the top ELIGIBLE (non-disqualified) run — and its
+  // replay must be reviewed before the button unlocks.
+  const topAddress = board.find((r: any) => !r.disqualified)?.address;
   const reviewedTopRun = reviewedAddress && reviewedAddress === topAddress;
 
   return (
@@ -128,15 +149,25 @@ export default function AdminPage({
         )}
         {board.length > 0 && (
           <table className="board">
-            <thead><tr><th>#</th><th>Player</th><th>Score</th><th>Detail</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>Player</th><th>Score</th><th>Detail</th><th></th><th></th></tr></thead>
             <tbody>
               {board.map((r: any, i: number) => (
-                <tr key={r.address} className={i === 0 ? "first" : ""}>
+                <tr key={r.address} className={r.disqualified ? "dq" : r.address === topAddress ? "first" : ""}>
                   <td>{i + 1}</td>
-                  <td className="mono">{r.address}</td>
+                  <td className="mono">
+                    {r.address}
+                    {r.disqualified && <span className="dq-tag"> DISQUALIFIED{r.dq_reason ? `: ${r.dq_reason}` : ""}</span>}
+                  </td>
                   <td>{Number(r.score).toLocaleString()}</td>
                   <td className="dim">{JSON.stringify(r.score_detail)}</td>
                   <td><button className="link" onClick={() => loadReplay(r.address)}>Review replay</button></td>
+                  <td>
+                    {r.disqualified ? (
+                      <button className="link" onClick={() => reinstate(r.address)}>Reinstate</button>
+                    ) : (
+                      <button className="link" onClick={() => disqualify(r.address)}>Disqualify</button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

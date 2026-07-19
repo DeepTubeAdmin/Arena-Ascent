@@ -12,5 +12,5 @@ arbitrum_one = "${ARBITRUM_ONE_RPC}"
 arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC}"
 
 [etherscan]
-arbitrum_one = { key = "${ARBISCAN_API_KEY}", url = "https://api.etherscan.io/v2/api", chain = 42161 }
-arbitrum_sepolia = { key = "${ARBISCAN_API_KEY}", url = "https://api.etherscan.io/v2/api", chain = 421614 }
+arbitrum_one = { key = "${ARBISCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=42161" }
+arbitrum_sepolia = { key = "${ARBISCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=421614" }

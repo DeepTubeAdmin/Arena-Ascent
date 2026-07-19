@@ -43,12 +43,28 @@ export async function completeSession(roundId: string, address: string) {
 }
 
 export async function leaderboard(roundId: string) {
+  // Admin view: includes disqualified runs (flagged) so the operator sees
+  // everything. Eligible runs sort first.
   return q(
-    `SELECT address, score, score_detail, completed_at
+    `SELECT address, score, score_detail, completed_at, disqualified, dq_reason
      FROM sessions WHERE round_id=$1 AND score IS NOT NULL
-     ORDER BY score DESC, completed_at ASC`,
+     ORDER BY disqualified ASC, score DESC, completed_at ASC`,
     [roundId]
   );
+}
+
+export async function setDisqualified(
+  roundId: string,
+  address: string,
+  disqualified: boolean,
+  reason?: string
+) {
+  const rows = await q(
+    `UPDATE sessions SET disqualified=$3, dq_reason=$4
+     WHERE round_id=$1 AND address=$2 RETURNING address`,
+    [roundId, address, disqualified, disqualified ? reason ?? "unspecified" : null]
+  );
+  if (rows.length === 0) throw new Error("no session for that address");
 }
 
 export async function replayArtifact(roundId: string, address: string) {

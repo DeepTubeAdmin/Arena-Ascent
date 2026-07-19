@@ -42,6 +42,11 @@ export const api = {
   adminLeaderboard: (id: string) => call(`/admin/rounds/${id}/leaderboard`),
   adminReplay: (id: string, address: string) => call(`/admin/rounds/${id}/replay/${address}`),
   adminFlags: (id: string) => call(`/admin/rounds/${id}/flags`),
+  adminDisqualify: (id: string, address: string, reason?: string, undo?: boolean) =>
+    call(`/admin/rounds/${id}/disqualify`, {
+      method: "POST",
+      body: JSON.stringify({ address, reason, undo }),
+    }),
   adminApprove: (id: string) =>
     call(`/admin/rounds/${id}/approve`, {
       method: "POST",

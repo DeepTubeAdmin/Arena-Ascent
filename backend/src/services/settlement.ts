@@ -11,8 +11,9 @@ export async function approveAndSubmit(roundId: string, adminAddress: string) {
   if (!oracleWallet) throw new Error("oracle key not configured");
 
   const board = await leaderboard(roundId);
-  if (board.length === 0) throw new Error("no scored sessions");
-  const winner = getAddress(board[0].address);
+  const eligible = board.filter((r: any) => !r.disqualified);
+  if (eligible.length === 0) throw new Error("no eligible (non-disqualified) scored sessions");
+  const winner = getAddress(eligible[0].address);
 
   const hash = await oracleWallet.writeContract({
     address: config.contractAddress,

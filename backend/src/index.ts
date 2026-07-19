@@ -14,7 +14,7 @@ import { q } from "./db.js";
 import { issueNonce, verifySiwe, requireAuth, requireAdmin } from "./auth.js";
 import { startEntrantWatcher, readRound } from "./chain.js";
 import { issuePlayToken, resolvePlayToken } from "./services/sessions.js";
-import { appendInputs, completeSession, leaderboard, replayArtifact } from "./services/scoring.js";
+import { appendInputs, completeSession, leaderboard, replayArtifact, setDisqualified } from "./services/scoring.js";
 import { approveAndSubmit, abuseFlags } from "./services/settlement.js";
 import { RoundState } from "../../shared/types";
 
@@ -84,7 +84,7 @@ app.get("/rounds/:id/me", async (req, reply) => {
 app.get("/rounds/:id/results", async (req) => {
   const { id } = req.params as { id: string };
   const settled = await q("SELECT winner, tx_hash FROM settlements WHERE round_id=$1", [id]);
-  const board = await leaderboard(id);
+  const board = (await leaderboard(id)).filter((r: any) => !r.disqualified);
   return {
     winner: settled[0]?.winner ?? null,
     txHash: settled[0]?.tx_hash ?? null,
@@ -202,6 +202,18 @@ app.get("/admin/rounds/:id/flags", async (req, reply) => {
     return { flags: await abuseFlags(id) };
   } catch (e: any) {
     return reply.code(403).send({ error: e.message });
+  }
+});
+
+app.post("/admin/rounds/:id/disqualify", async (req, reply) => {
+  try {
+    requireAdmin(req.headers.authorization);
+    const { id } = req.params as { id: string };
+    const { address, reason, undo } = req.body as { address: string; reason?: string; undo?: boolean };
+    await setDisqualified(id, address.toLowerCase(), !undo, reason);
+    return { ok: true };
+  } catch (e: any) {
+    return reply.code(400).send({ error: e.message });
   }
 });
 

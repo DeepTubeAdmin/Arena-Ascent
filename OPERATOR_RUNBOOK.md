@@ -94,13 +94,18 @@ scoring.
 ### A8. Close the window
 Operator -> **Close window (SETTLING)** -> confirm. State `2 -> 3`.
 
-### A9. Review and settle
+### A9. Review, disqualify cheaters if needed, and settle
 1. **Load final leaderboard**.
 2. Check abuse flags (shared-IP hints).
-3. **Review the #1 run's replay** — approve stays locked until you do. Watch for
-   automation red flags.
-4. **Approve** -> two-step confirm -> oracle submits winner on-chain. State
-   `3 -> 4`.
+3. **Review the top run's replay** — approve stays locked until you have
+   reviewed the replay of the top ELIGIBLE run. Watch for automation red flags.
+4. **If the top run is cheating:** click **Disqualify** on that row and record
+   the reason (kept as an audit trail). The run is struck from contention and
+   hidden from public results; the next non-disqualified score becomes the
+   approve target — and you must review THAT run's replay before the button
+   unlocks. Repeat as needed. (Mistake? **Reinstate** undoes a DQ.)
+5. **Approve** -> two-step confirm -> oracle submits the top eligible player as
+   winner on-chain. State `3 -> 4`.
 
 ### A10. Withdraw fees and winner claims (any order)
 As of the settlement-fee contract update, your 15% fee accrues the moment the
