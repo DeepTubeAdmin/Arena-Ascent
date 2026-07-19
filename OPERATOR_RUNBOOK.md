@@ -13,7 +13,7 @@ the addresses change but the flow is identical.
 
 | Thing | Value |
 |---|---|
-| Contract address | `0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E` |
+| Contract address | `0xBE1E0Dc13Be1CEb1808073a87DEA4D995aFeD4E6` |
 | Your owner/operator wallet | `0x52E552063aC1aE24E0f55B87BB89502bd6eaAE1B` |
 | Network | Arbitrum Sepolia (chain id `421614`) |
 | Test USDC token | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` |
@@ -83,9 +83,14 @@ the pool). The backend chain-watcher mirrors entries automatically.
 ### A5. Close registration
 Operator -> **Close registration** -> confirm. State `0 -> 1`.
 
-### A6. Go live
+### A6. Go live — starts the 60-second join window
 Operator -> **Open window (LIVE)** -> confirm. State `1 -> 2`. The **Play my one
-attempt** button now appears for entrants.
+attempt** button appears for entrants WITH A 60-SECOND COUNTDOWN: attempts can
+only be STARTED within 60s of this moment (server-enforced anti-cheat — keeps
+all runs simultaneous so nobody starts with foreknowledge of the shared
+layout). Players who miss the join window cannot play. Runs already in
+progress when the window closes are unaffected. So: make sure your players are
+ready and watching BEFORE you click Open window.
 
 ### A7. Players play
 One attempt each, no replays. Input streams to the backend for authoritative

@@ -18,6 +18,8 @@ import { appendInputs, completeSession, leaderboard, replayArtifact, setDisquali
 import { approveAndSubmit, abuseFlags } from "./services/settlement.js";
 import { RoundState } from "../../shared/types";
 
+const JOIN_WINDOW_MS = 60_000; // players may START their attempt within 60s of go-live
+
 const app = Fastify({ logger: true });
 await app.register(cors, { origin: config.frontendOrigin, credentials: true });
 
@@ -61,6 +63,9 @@ app.get("/rounds/current", async () => {
       entrantCount: onChain[3],
       platformFeeBps: onChain[7],
       liveStart: r.live_start,
+      joinDeadline: r.live_opened_at
+        ? new Date(new Date(r.live_opened_at).getTime() + JOIN_WINDOW_MS).toISOString()
+        : null,
       liveEnd: r.live_end,
     },
   };
@@ -135,9 +140,17 @@ app.post("/play/start", async (req, reply) => {
     const address = requireAuth(req.headers.authorization);
     const { roundId } = req.body as { roundId: string };
 
-    const round = await q("SELECT state, live_start, live_end FROM rounds WHERE round_id=$1", [roundId]);
+    const round = await q("SELECT state, live_start, live_end, live_opened_at FROM rounds WHERE round_id=$1", [roundId]);
     if (round.length === 0) return reply.code(404).send({ error: "no round" });
     if (round[0].state !== RoundState.Live) return reply.code(409).send({ error: "round not live" });
+    // Anti-cheat: attempts may only be STARTED within the join window after
+    // go-live. UI shows a countdown, but this check is the enforcement.
+    if (round[0].live_opened_at) {
+      const opened = new Date(round[0].live_opened_at).getTime();
+      if (Date.now() > opened + JOIN_WINDOW_MS) {
+        return reply.code(403).send({ error: "join window closed" });
+      }
+    }
 
     const { token, seed } = await issuePlayToken(roundId, address);
     const round2 = await q("SELECT game_id FROM rounds WHERE round_id=$1", [roundId]);

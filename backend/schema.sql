@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS rounds (
   state         INT  NOT NULL DEFAULT 0,     -- mirrors on-chain enum
   live_start    TIMESTAMPTZ,                 -- scheduled window open
   live_end      TIMESTAMPTZ,                 -- scheduled window close
+  live_opened_at TIMESTAMPTZ,                -- actual go-live moment; starts the 60s join window
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

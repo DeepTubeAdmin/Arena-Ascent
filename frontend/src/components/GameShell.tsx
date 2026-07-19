@@ -27,6 +27,18 @@ export default function GameShell({
   const [seed, setSeed] = useState("");
   const [provisional, setProvisional] = useState<number | null>(null);
   const [err, setErr] = useState("");
+  // Join-window countdown: players may START only within 60s of go-live.
+  // The server enforces this; the clock here is the honest UI for it.
+  const [joinLeft, setJoinLeft] = useState<number | null>(null);
+  useEffect(() => {
+    if (!round.joinDeadline) { setJoinLeft(null); return; }
+    const deadline = new Date(round.joinDeadline).getTime();
+    const tick = () => setJoinLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+    tick();
+    const t = setInterval(tick, 250);
+    return () => clearInterval(t);
+  }, [round.joinDeadline]);
+  const joinClosed = joinLeft !== null && joinLeft <= 0;
 
   const tokenRef = useRef("");
   const queueRef = useRef<InputEvent[]>([]);
@@ -120,10 +132,28 @@ export default function GameShell({
         <div className="banner">Your attempt is complete. Results after the window closes.</div>
       ) : canPlay ? (
         <div className="play-cta">
-          <p>The arena is open. You get one run — 30 seconds. When you press Play, your attempt is consumed.</p>
-          <button className="btn big" onClick={begin} disabled={phase === "loading"}>
-            {phase === "loading" ? "Preparing your session…" : "Play my one attempt"}
-          </button>
+          {joinClosed ? (
+            <>
+              <p>The join window has closed. Attempts could only be started within
+              60 seconds of the arena opening — this keeps every run simultaneous
+              and fair. Results will appear after the window.</p>
+              <button className="btn big" disabled>Join window closed</button>
+            </>
+          ) : (
+            <>
+              <p>The arena is open. You get one run — 30 seconds. When you press
+              Play, your attempt is consumed.{joinLeft !== null && (
+                <b> You have {joinLeft}s to begin.</b>
+              )}</p>
+              <button className="btn big" onClick={begin} disabled={phase === "loading"}>
+                {phase === "loading"
+                  ? "Preparing your session…"
+                  : joinLeft !== null
+                    ? `Play my one attempt (${joinLeft}s)`
+                    : "Play my one attempt"}
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="banner">
