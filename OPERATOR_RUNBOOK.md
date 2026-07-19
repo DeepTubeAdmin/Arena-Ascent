@@ -13,7 +13,7 @@ the addresses change but the flow is identical.
 
 | Thing | Value |
 |---|---|
-| Contract address | `0xBE1E0Dc13Be1CEb1808073a87DEA4D995aFeD4E6` |
+| Contract address | `0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E` |
 | Your owner/operator wallet | `0x52E552063aC1aE24E0f55B87BB89502bd6eaAE1B` |
 | Network | Arbitrum Sepolia (chain id `421614`) |
 | Test USDC token | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` |
