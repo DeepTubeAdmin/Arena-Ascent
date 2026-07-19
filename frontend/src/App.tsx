@@ -24,6 +24,7 @@ export interface RoundInfo {
   entrantCount: number;
   platformFeeBps: number;
   liveStart: string | null;
+  joinDeadline?: string | null;
   liveEnd: string | null;
 }
 
