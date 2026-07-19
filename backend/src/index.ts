@@ -96,6 +96,39 @@ app.get("/rounds/:id/results", async (req) => {
   };
 });
 
+app.get("/champions", async () => {
+  // Hall of fame: every settled round, newest first. Prize is computed from
+  // the on-chain pool at the round's fee split.
+  const rows = await q(
+    `SELECT s.round_id, s.winner, s.approved_at, r.game_id
+     FROM settlements s JOIN rounds r ON r.round_id = s.round_id
+     WHERE s.winner IS NOT NULL
+     ORDER BY s.approved_at DESC`
+  );
+  const champions: any[] = [];
+  for (const row of rows) {
+    try {
+      const rc = await readRound(BigInt(row.round_id));
+      const asset = rc[0] as string;
+      const pool = rc[2] as bigint;
+      const bps = BigInt(rc[7] as number);
+      const prize = (pool * (10000n - bps)) / 10000n;
+      if (prize === 0n) continue; // unreadable/legacy round — skip
+      champions.push({
+        roundId: String(row.round_id),
+        gameId: row.game_id,
+        winner: row.winner,
+        wonAt: row.approved_at,
+        prize: prize.toString(),
+        asset,
+      });
+    } catch {
+      /* skip rounds the current contract can't read (old deployments) */
+    }
+  }
+  return { champions };
+});
+
 // ------------------------------------------------------------------ play
 app.post("/play/start", async (req, reply) => {
   try {

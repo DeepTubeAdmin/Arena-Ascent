@@ -10,6 +10,7 @@ import GameShell from "./components/GameShell";
 import Results from "./components/Results";
 import FAQ from "./components/FAQ";
 import Terms from "./components/Terms";
+import Champions from "./components/Champions";
 import HeroPedestal from "./components/HeroPedestal";
 import AdminPage from "./admin/AdminPage";
 
@@ -36,7 +37,7 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [me, setMe] = useState<{ entered: boolean; session: any } | null>(null);
-  const [view, setView] = useState<"arena" | "faq" | "terms" | "admin">("arena");
+  const [view, setView] = useState<"arena" | "faq" | "terms" | "champions" | "admin">("arena");
   const [err, setErr] = useState("");
   const [showInstall, setShowInstall] = useState(false);
 
@@ -111,6 +112,7 @@ export default function App() {
         <nav>
           <button className="link" onClick={() => setView("arena")}>Arena</button>
           <button className="link" onClick={() => setView("faq")}>How it works</button>
+          <button className="link" onClick={() => setView("champions")}>Champions</button>
           {isAdmin && (
             <button className="link" onClick={() => setView("admin")}>Operator</button>
           )}
@@ -159,6 +161,8 @@ export default function App() {
         <FAQ />
       ) : view === "terms" ? (
         <Terms />
+      ) : view === "champions" ? (
+        <Champions />
       ) : !round || round.state === RoundState.RegistrationOpen || round.state === RoundState.RegistrationClosed ? (
         <main className="landing">
           <h1>One game. One shot.<br />One winner.</h1>
