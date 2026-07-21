@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatUnits, zeroAddress } from "viem";
 import { api } from "../lib/api";
+import { useEthUsdPrice, usdHint } from "../lib/ethPrice";
 
 interface Champion {
   roundId: string;
@@ -15,6 +16,7 @@ interface Champion {
 
 export default function Champions() {
   const [champions, setChampions] = useState<Champion[] | null>(null);
+  const ethUsd = useEthUsdPrice();
 
   useEffect(() => {
     api.champions().then((r: any) => setChampions(r.champions)).catch(() => setChampions([]));
@@ -23,7 +25,8 @@ export default function Champions() {
   function fmtPrize(c: Champion): string {
     const isEth = c.asset === zeroAddress;
     const amount = formatUnits(BigInt(c.prize), isEth ? 18 : 6);
-    return `${amount} ${isEth ? "ETH" : "USDC"}`;
+    const hint = isEth ? ` ${usdHint(amount, ethUsd)}` : "";
+    return `${amount} ${isEth ? "ETH" : "USDC"}${hint}`;
   }
 
   return (

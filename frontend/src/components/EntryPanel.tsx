@@ -5,6 +5,7 @@ import { useWriteContract, usePublicClient, useAccount } from "wagmi";
 import { formatUnits, zeroAddress } from "viem";
 import { CONTRACT, USDC, arenaAbi, erc20Abi } from "../lib/wagmi";
 import { getFeeOverrides, friendlyTxError } from "../lib/txFees";
+import { useEthUsdPrice, usdHint } from "../lib/ethPrice";
 import type { RoundInfo } from "../App";
 import { RoundState } from "../../../shared/types";
 
@@ -33,6 +34,9 @@ export default function EntryPanel({
   const projectedTake = (projectedPool * (10000n - bps)) / 10000n;
   const fmt = (v: bigint) => formatUnits(v, decimals);
   const regOpen = round.state === RoundState.RegistrationOpen;
+  const ethUsd = useEthUsdPrice();
+  // USD context shown for ETH rounds only; keeps ETH figures untouched.
+  const usd = (v: bigint) => (isEth ? usdHint(fmt(v), ethUsd) : "");
 
   async function enter() {
     try {
@@ -72,21 +76,21 @@ export default function EntryPanel({
       <div className="entry-grid">
         <div className="stat">
           <div className="stat-label">Entry fee</div>
-          <div className="stat-value">{fmt(fee)} {symbol}</div>
+          <div className="stat-value">{fmt(fee)} {symbol} <span className="usd-hint">{usd(fee)}</span></div>
         </div>
         <div className="stat">
           <div className="stat-label">Current pool · {round.entrantCount} entrants</div>
-          <div className="stat-value gold">{fmt(pool)} {symbol}</div>
+          <div className="stat-value gold">{fmt(pool)} {symbol} <span className="usd-hint">{usd(pool)}</span></div>
         </div>
         <div className="stat">
           <div className="stat-label">Winner takes (85%)</div>
-          <div className="stat-value">{fmt(winnerTake)} {symbol}</div>
+          <div className="stat-value">{fmt(winnerTake)} {symbol} <span className="usd-hint">{usd(winnerTake)}</span></div>
         </div>
       </div>
 
       <p className="entry-note">
-        If you enter, the pool becomes {fmt(projectedPool)} {symbol} and the winner's
-        take becomes {fmt(projectedTake)} {symbol}. One entry per wallet. One attempt.
+        If you enter, the pool becomes {fmt(projectedPool)} {symbol} {usd(projectedPool)} and the winner's
+        take becomes {fmt(projectedTake)} {symbol} {usd(projectedTake)}. One entry per wallet. One attempt.
         The game is revealed only when the window opens.
       </p>
 
@@ -100,7 +104,7 @@ export default function EntryPanel({
         <button className="btn big" onClick={enter} disabled={status === "approving" || status === "entering"}>
           {status === "approving" ? "Approving USDC…"
             : status === "entering" ? "Confirming entry…"
-            : `Enter for ${fmt(fee)} ${symbol}`}
+            : `Enter for ${fmt(fee)} ${symbol} ${usd(fee)}`}
         </button>
       )}
       {err && <div className="banner error">{err}</div>}

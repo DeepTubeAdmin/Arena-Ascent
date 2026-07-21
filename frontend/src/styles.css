@@ -318,3 +318,6 @@ h1, .page-title {
 .check.ok { color: var(--phosphor); }
 .check.bad { color: var(--gold); }
 .check .link { margin-left: 10px; }
+
+/* ---- USD context next to ETH figures ---- */
+.usd-hint { color: var(--dim); font-size: 0.78em; font-weight: 400; }
