@@ -311,3 +311,10 @@ h1, .page-title {
   width: min(720px, 92vw); aspect-ratio: 2/1;
   background: var(--panel); border: 1px solid var(--line-strong); border-radius: 4px;
 }
+
+/* ---- test page readiness checklist ---- */
+.check-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+.check { font-size: 15.5px; color: var(--dim); }
+.check.ok { color: var(--phosphor); }
+.check.bad { color: var(--gold); }
+.check .link { margin-left: 10px; }

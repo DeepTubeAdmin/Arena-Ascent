@@ -67,6 +67,26 @@ legal-posture requirements, not suggestions.
    never chance-based rewards (random loot, critical hits, lucky multipliers).
    Same inputs at the same times → same result, for everyone, always.
 
+6. **Understand what the seed does — and verify it.** The platform issues ONE
+   seed per ROUND. Consequences you must internalize:
+   - Two players in the SAME round see the IDENTICAL game: every obstacle,
+     spawn, and timing exactly the same. If they don't, that is a critical bug.
+   - DIFFERENT rounds have DIFFERENT seeds, so layouts differ between rounds
+     BY DESIGN. Seeing "a different game" across two test rounds is correct
+     behavior, not randomness.
+   - FORBIDDEN in sim/schedule code: `Math.random()`, `Date.now()`,
+     `performance.now()`, wall-clock reads, locale/timezone-dependent
+     formatting, floating-point accumulation, and iteration over objects with
+     unspecified key order. The ONLY entropy allowed is the platform seed via
+     the shared PRNG.
+   - MANDATORY pre-launch verification, every game, no exceptions:
+     (a) `simulate(seed, log)` twice with identical inputs → identical score
+     and end state (the determinism test).
+     (b) The two-wallet check: enter one test round with two different
+     wallets, start both sessions, and confirm both received the SAME seed
+     (`SELECT address, seed FROM sessions WHERE round_id = '<id>'` — all rows
+     identical) and that the first obstacles look identical on screen.
+
 ---
 
 ## What you deliver each month

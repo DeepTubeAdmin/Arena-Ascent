@@ -11,6 +11,7 @@ import Results from "./components/Results";
 import FAQ from "./components/FAQ";
 import Terms from "./components/Terms";
 import Champions from "./components/Champions";
+import TestPage from "./components/TestPage";
 import HeroPedestal from "./components/HeroPedestal";
 import AdminPage from "./admin/AdminPage";
 
@@ -38,7 +39,7 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [me, setMe] = useState<{ entered: boolean; session: any } | null>(null);
-  const [view, setView] = useState<"arena" | "faq" | "terms" | "champions" | "admin">("arena");
+  const [view, setView] = useState<"arena" | "faq" | "terms" | "champions" | "test" | "admin">("arena");
   const [err, setErr] = useState("");
   const [showInstall, setShowInstall] = useState(false);
 
@@ -114,6 +115,7 @@ export default function App() {
           <button className="link" onClick={() => setView("arena")}>Arena</button>
           <button className="link" onClick={() => setView("faq")}>How it works</button>
           <button className="link" onClick={() => setView("champions")}>Champions</button>
+          <button className="link" onClick={() => setView("test")}>Test</button>
           {isAdmin && (
             <button className="link" onClick={() => setView("admin")}>Operator</button>
           )}
@@ -164,6 +166,8 @@ export default function App() {
         <Terms />
       ) : view === "champions" ? (
         <Champions />
+      ) : view === "test" ? (
+        <TestPage />
       ) : !round || round.state === RoundState.RegistrationOpen || round.state === RoundState.RegistrationClosed ? (
         <main className="landing">
           <h1>One game. One shot.<br />One winner.</h1>
