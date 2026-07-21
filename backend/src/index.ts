@@ -117,6 +117,37 @@ app.get("/rounds/:id/results", async (req) => {
   };
 });
 
+let ethUsdCache: { price: number | null; at: number } = { price: null, at: 0 };
+app.get("/price/eth", async () => {
+  // Server-side ETH/USD fetch: immune to browser ad-blockers, one upstream
+  // call per minute regardless of visitor count. Fails soft (usd: null).
+  const now = Date.now();
+  if (ethUsdCache.price !== null && now - ethUsdCache.at < 60_000) {
+    return { usd: ethUsdCache.price };
+  }
+  let p: number | null = null;
+  try {
+    const r = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
+    if (r.ok) {
+      const j: any = await r.json();
+      const v = Number(j?.data?.amount);
+      if (Number.isFinite(v) && v > 0) p = v;
+    }
+  } catch { /* fall through */ }
+  if (p === null) {
+    try {
+      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+      if (r.ok) {
+        const j: any = await r.json();
+        const v = Number(j?.ethereum?.usd);
+        if (Number.isFinite(v) && v > 0) p = v;
+      }
+    } catch { /* both down */ }
+  }
+  if (p !== null) ethUsdCache = { price: p, at: now };
+  return { usd: ethUsdCache.price };
+});
+
 app.get("/champions", async () => {
   // Hall of fame: every settled round, newest first. Prize is computed from
   // the on-chain pool at the round's fee split.

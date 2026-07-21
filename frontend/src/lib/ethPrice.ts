@@ -4,6 +4,7 @@
 // UI simply omits the USD hint (never blocks anything on price data).
 
 import { useEffect, useState } from "react";
+import { api } from "./api";
 
 let cachedPrice: number | null = null;
 let lastFetch = 0;
@@ -11,7 +12,14 @@ let inflight: Promise<number | null> | null = null;
 const TTL_MS = 60_000;
 
 async function fetchPrice(): Promise<number | null> {
-  // Primary: Coinbase spot
+  // Primary: our own backend proxy — served from the site's API domain, so
+  // browser ad-blockers (which often block exchange APIs) can't interfere.
+  try {
+    const j: any = await api.ethPrice();
+    const p = Number(j?.usd);
+    if (Number.isFinite(p) && p > 0) return p;
+  } catch { /* fall through to direct sources */ }
+  // Fallback: Coinbase spot direct
   try {
     const r = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
     if (r.ok) {

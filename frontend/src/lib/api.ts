@@ -27,6 +27,7 @@ export const api = {
     call("/auth/verify", { method: "POST", body: JSON.stringify({ message, signature }) }),
   currentRound: () => call("/rounds/current"),
   champions: () => call("/champions"),
+  ethPrice: () => call("/price/eth"),
   me: (roundId: string) => call(`/rounds/${roundId}/me`),
   results: (roundId: string) => call(`/rounds/${roundId}/results`),
   playStart: (roundId: string) =>
