@@ -22,7 +22,7 @@ export async function verifySiwe(message: string, signature: `0x${string}`) {
   if (!ok) throw new Error("signature invalid");
 
   const address = parsed.address.toLowerCase();
-  const token = jwt.sign({ sub: address }, config.jwtSecret, { expiresIn: "12h" });
+  const token = jwt.sign({ sub: address }, config.jwtSecret, { expiresIn: "7d" });
   return { address, token };
 }
 

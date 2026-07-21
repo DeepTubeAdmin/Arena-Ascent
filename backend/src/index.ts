@@ -52,6 +52,22 @@ app.get("/rounds/current", async () => {
   if (rows.length === 0) return { round: null };
   const r = rows[0];
   const onChain = await readRound(BigInt(r.round_id));
+  const chainState = Number(onChain[4]);
+  // SELF-HEAL: the chain is the source of truth for round state. If the
+  // database lags (e.g. an admin API call silently failed after a successful
+  // on-chain transition), sync it here — and stamp the go-live moment the
+  // first time we discover the round is Live, arming the join window.
+  if (chainState !== r.state) {
+    await q("UPDATE rounds SET state=$2 WHERE round_id=$1", [r.round_id, chainState]);
+    r.state = chainState;
+  }
+  if (chainState === RoundState.Live && !r.live_opened_at) {
+    const stamped = await q(
+      "UPDATE rounds SET live_opened_at = COALESCE(live_opened_at, now()) WHERE round_id=$1 RETURNING live_opened_at",
+      [r.round_id]
+    );
+    r.live_opened_at = stamped[0].live_opened_at;
+  }
   return {
     round: {
       roundId: String(r.round_id),

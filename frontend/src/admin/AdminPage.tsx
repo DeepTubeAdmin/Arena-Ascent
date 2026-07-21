@@ -66,7 +66,15 @@ export default function AdminPage({
     if (!round) return;
     const ok = await ownerTx(fn, [BigInt(round.roundId)]);
     if (!ok) return; // on-chain tx failed — do NOT mirror the state to the backend
-    await api.adminSetState(round.roundId, state);
+    try {
+      await api.adminSetState(round.roundId, state);
+    } catch (e: any) {
+      setMsg(
+        `On-chain ${fn} CONFIRMED, but the backend update failed: ${e.message}. ` +
+        `If it says unauthorized/forbidden, your sign-in expired — sign out and back in. ` +
+        `The site now self-heals state from the chain, so a refresh will still pick this up.`
+      );
+    }
     onChanged();
   }
 
