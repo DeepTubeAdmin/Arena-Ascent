@@ -89,6 +89,46 @@ legal-posture requirements, not suggestions.
 
 ---
 
+## Performance requirements (mandatory — every game, every device)
+
+The sim is sacred; the renderer does the smoothing. NEVER adapt physics,
+timing, speeds, or difficulty to the player's device or connection — that
+breaks determinism and fairness. All smoothness comes from rendering:
+
+1. **Render interpolation for fast-moving objects.** The sim advances in
+   discrete 16ms steps; the display refreshes on its own rhythm. Drawing
+   objects only at whole-step positions makes them visibly teleport once they
+   move far per step (this produced real stutter in Duck Run's late game).
+   Compute the fractional position of the wall clock inside the current step
+   (`frac = exactStep - st.step`, 0..1) and draw moving objects offset by
+   `velocity × frac`. Interpolation is COSMETIC ONLY: it must never feed back
+   into sim state, collision, or scoring. See Duck Run's `drawFrame(…, frac)`.
+
+2. **Never set React state per frame.** A `setState` inside the rAF loop
+   forces a React render alongside every canvas frame — jank on weak machines.
+   The canvas IS the real-time HUD; throttle any React-side display state to
+   ≤4 updates/second, and set the exact final value once at game end.
+
+3. **Minimize per-step allocations.** Object/array churn inside `stepState`
+   or the draw loop triggers garbage-collection pauses at the worst moments.
+   Reuse buffers; avoid `map`/`filter`/spread in hot paths.
+
+4. **Bound catch-up work.** When a frame runs long, the loop fast-forwards
+   through missed steps. That's correct (the tournament clock never pauses for
+   one player — anti-cheat), but keep per-step cost low enough that catch-up
+   can't spiral on slow hardware.
+
+5. **Connection speed must not affect gameplay.** Games run fully locally;
+   inputs are timestamped client-side and re-simulated server-side. Stream the
+   input log in small batches, fire-and-forget, never blocking the game loop
+   on any network response; do a final reliable flush at completion.
+
+6. **Test under throttling before launch.** Chrome DevTools → Performance →
+   CPU throttling 4×–6×: play the full ramp including the fastest phase. If
+   motion stutters or inputs lag under throttle, fix it before the round.
+
+---
+
 ## What you deliver each month
 
 Three code pieces plus one registration entry:

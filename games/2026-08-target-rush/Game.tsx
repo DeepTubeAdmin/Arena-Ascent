@@ -22,6 +22,7 @@ import {
 export default function TargetRushGame({ seed, onInput, onReady, started, onComplete }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [displayScore, setDisplayScore] = useState(0);
+  const hudAtRef = useRef(0);
   const [done, setDone] = useState(false);
 
   const targetsRef = useRef<Target[]>([]);
@@ -61,11 +62,16 @@ export default function TargetRushGame({ seed, onInput, onReady, started, onComp
       }
 
       draw(elapsed);
-      setDisplayScore(state.score);
+      const nowMs = performance.now();
+      if (nowMs - hudAtRef.current > 250) {
+        hudAtRef.current = nowMs;
+        setDisplayScore(state.score);
+      }
 
       if (state.step >= TOTAL_STEPS) {
         if (!completedRef.current) {
           completedRef.current = true;
+          setDisplayScore(state.score); // exact final score, immediately
           setDone(true);
           onComplete({ endedAt: Math.min(elapsed, GAME_MS), reason: "timeout" });
         }
