@@ -171,6 +171,7 @@ export default function App() {
       ) : !round || round.state === RoundState.RegistrationOpen || round.state === RoundState.RegistrationClosed ? (
         <main className="landing">
           <h1>One game. One shot.<br />One winner.</h1>
+          <p className="tagline">The pot is real. So is the pressure.</p>
           <HeroPedestal />
           <p className="sub">
             A never-before-seen skill game, playable for one short window each

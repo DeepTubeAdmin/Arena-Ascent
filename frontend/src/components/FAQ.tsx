@@ -1,5 +1,9 @@
 // FAQ / How it works — static presentational page. No backend calls.
+// (The contract link below is built from the deployed address + active chain.)
+import { CONTRACT, activeChain } from "../lib/wagmi";
+
 export default function FAQ() {
+  const explorerUrl = `${activeChain.blockExplorers?.default.url}/address/${CONTRACT}`;
   return (
     <main className="faq">
       <div className="eyebrow">HOW IT WORKS</div>
@@ -76,6 +80,43 @@ export default function FAQ() {
         <p>
           The winner receives <b>85% of the prize pool</b>, claimed directly to
           their wallet.
+        </p>
+      </section>
+
+      <section className="faq-section">
+        <h2>The vault is a smart contract — and that changes everything</h2>
+        <p>
+          Here's the part that makes this different from any sweepstakes or
+          contest site you've used: <b>no person holds the prize money.</b>
+          Every entry fee goes straight into a smart contract — a program
+          living on the Arbitrum blockchain that acts as an automated,
+          incorruptible escrow. Arena Ascent never takes custody of your entry;
+          the code does.
+        </p>
+        <p>
+          And that code's rules are physics, not promises. The pool
+          accumulates on-chain where anyone can watch it grow in real time.
+          When a round settles, <b>the winner claims their prize directly from
+          the contract to their own wallet</b> — no invoice, no payout request,
+          no waiting on a human to press "send." If a round is ever voided,
+          the refund path is built into the same code: every entrant reclaims
+          their full fee themselves, guaranteed by the contract, not by our
+          goodwill.
+        </p>
+        <p>
+          This is what blockchain was actually made for: strangers competing
+          for real money without having to trust each other — or us — with
+          the pot. The contract can't play favorites, can't spend the pool on
+          something else, and can't change the rules mid-round.
+        </p>
+        <p>
+          <b>Don't take our word for any of this.</b> The contract's code is
+          public and verified — anyone can read exactly what it does:
+        </p>
+        <p>
+          <a className="contract-link" href={explorerUrl} target="_blank" rel="noopener noreferrer">
+            View the Arena Ascent contract on the block explorer →
+          </a>
         </p>
       </section>
 
