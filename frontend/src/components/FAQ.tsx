@@ -35,8 +35,13 @@ export default function FAQ() {
           are shown before you enter: the fee, the current pool, and the split.
         </p>
         <p>
-          <b>2. Show up.</b> When the live window opens, entrants can play. You
-          have one attempt — once you press play, that's your run.
+          <b>2. Show up — early.</b> When the live window opens, you have
+          <b> 60 seconds to press Play</b>. This keeps every run simultaneous
+          and fair (nobody can wait, learn the layout from others, and start
+          late with an advantage). Be at your computer, signed in, before the
+          countdown hits zero — attempts cannot be started after the join
+          window closes, and missed windows are not refunded. You have one
+          attempt — once you press Play, that's your run.
         </p>
         <p>
           <b>3. Win.</b> After the window closes, scores are verified and the

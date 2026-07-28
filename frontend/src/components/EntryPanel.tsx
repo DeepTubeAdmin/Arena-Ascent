@@ -88,12 +88,6 @@ export default function EntryPanel({
         </div>
       </div>
 
-      <div className="join-window-notice">
-        ⚠ ONE MINUTE TO JOIN: when the countdown hits zero and the arena
-        opens, you have <b>60 seconds</b> to press Play. Be signed in and
-        waiting before it opens — attempts cannot be started after the join
-        window closes, and missed windows are not refunded.
-      </div>
       <p className="entry-note">
         If you enter, the pool becomes {fmt(projectedPool)} {symbol} {usd(projectedPool)} and the winner's
         take becomes {fmt(projectedTake)} {symbol} {usd(projectedTake)}. One entry per wallet. One attempt.
@@ -101,7 +95,15 @@ export default function EntryPanel({
       </p>
 
       {me?.entered ? (
-        <div className="banner ok">You're in. Be here when the window opens — you get exactly one run.</div>
+        <>
+          <div className="banner ok">You're in. Be here when the window opens — you get exactly one run.</div>
+          <div className="join-window-notice">
+            ⚠ ONE MINUTE TO JOIN: when the countdown hits zero and the arena
+            opens, you have <b>60 seconds</b> to press Play. Be signed in and
+            waiting before it opens — attempts cannot be started after the join
+            window closes, and missed windows are not refunded.
+          </div>
+        </>
       ) : !regOpen ? (
         <div className="banner">Registration is closed. The entrant list and pool are locked.</div>
       ) : !authed ? (
