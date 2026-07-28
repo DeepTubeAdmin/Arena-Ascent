@@ -1,10 +1,10 @@
-// Duck Run — backend GameModule. computeScore re-simulates from scratch;
+// Twisted System — backend GameModule. computeScore re-simulates from scratch;
 // its result is the ONLY trusted score.
 
 import { simulate, STEP_MS } from "./sim";
 import type { GameModule, InputEvent } from "../../shared/types";
 
-export const DuckRunModule: GameModule = {
+export const TwistedSystemModule: GameModule = {
   id: "2026-09-duck-run",
 
   async computeScore(inputLog: InputEvent[], seed: string) {
@@ -13,6 +13,7 @@ export const DuckRunModule: GameModule = {
       score: final.score,
       detail: {
         cleared: final.cleared,
+        misses: final.misses,
         survivedMs: (final.deathStep >= 0 ? final.deathStep : final.step) * STEP_MS,
         died: !final.alive,
       },

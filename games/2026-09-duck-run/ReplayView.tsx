@@ -1,32 +1,26 @@
-// Duck Run — operator replay viewer (mandatory pre-settlement review).
-// Reconstructs the run purely from (seed, inputLog); play / pause / scrub,
-// plus automation hints: reaction times from obstacle visibility to the
-// correct evasive action. Inhuman consistency or pre-visibility actions flag.
+// Twisted System — operator replay viewer (mandatory pre-settlement review).
+// Rebuilds the run from (seed, inputLog) alone: play / pause / scrub, plus
+// automation hints — reaction times from rod spawn to the correct evasive
+// action. Inhuman consistency or pre-spawn actions are the tells.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReplayArtifact, InputEvent } from "../../shared/types";
 import {
-  STEP_MS, MAX_STEPS, X_SPAWN, PLAYER_W, OB_W,
-  buildObstacles, bucketInputs, initState, stepState, speedAt,
-  type RunState,
+  STEP_MS, MAX_STEPS, X_SPAWN, PLAYER_W,
+  buildRods, bucketInputs, initState, stepState, speedAt,
 } from "./sim";
 import { drawFrame } from "./Game";
 
 function analyzeForAutomation(artifact: ReplayArtifact) {
-  const schedule = buildObstacles(artifact.seed);
+  const schedule = buildRods(artifact.seed);
   const buckets = bucketInputs(artifact.inputLog as InputEvent[]);
 
-  // For each obstacle, find when it became "actionable" (spawn) and the step
-  // of the matching evasive action that preceded the player-zone overlap.
-  const reactions: number[] = [];
-  let preVisible = 0;
-
-  // replay once to find death step / end
   const st = initState();
   while (st.alive && st.step < MAX_STEPS) {
     stepState(st, schedule, buckets.get(st.step) ?? []);
   }
   const endStep = st.deathStep >= 0 ? st.deathStep : st.step;
+  const hitsTaken = st.hits;
 
   const actions: { step: number; action: string }[] = [];
   for (const [s, evs] of buckets) {
@@ -37,9 +31,10 @@ function analyzeForAutomation(artifact: ReplayArtifact) {
   }
   actions.sort((a, b) => a.step - b.step);
 
+  const reactions: number[] = [];
+  let preVisible = 0;
   for (const o of schedule) {
     if (o.spawnStep > endStep) break;
-    // arrival step ≈ spawn + travel time at prevailing speed
     const v = speedAt(o.spawnStep);
     const arrive = o.spawnStep + Math.floor((X_SPAWN - PLAYER_W) / v);
     const want = o.kind === 0 ? "jump" : "duckDown";
@@ -56,15 +51,15 @@ function analyzeForAutomation(artifact: ReplayArtifact) {
   const stdev = Math.sqrt(variance);
 
   const flags: string[] = [];
-  if (reactions.length >= 8 && mean < 130) flags.push(`Superhuman mean reaction ${mean.toFixed(0)}ms across ${reactions.length} obstacles`);
+  if (reactions.length >= 8 && mean < 130) flags.push(`Superhuman mean reaction ${mean.toFixed(0)}ms across ${reactions.length} rods`);
   if (reactions.length >= 8 && stdev < 14) flags.push(`Machine-like consistency: stdev ${stdev.toFixed(1)}ms`);
-  if (preVisible > 1) flags.push(`${preVisible} actions before the obstacle spawned`);
-  return { flags, mean, stdev, endStep, finalScore: st.score, cleared: st.cleared };
+  if (preVisible > 1) flags.push(`${preVisible} actions before the rod spawned`);
+  return { flags, mean, stdev, endStep, finalScore: st.score, cleared: st.cleared, misses: st.misses };
 }
 
-export default function DuckRunReplay({ artifact }: { artifact: ReplayArtifact }) {
+export default function TwistedSystemReplay({ artifact }: { artifact: ReplayArtifact }) {
   const analysis = useMemo(() => analyzeForAutomation(artifact), [artifact]);
-  const schedule = useMemo(() => buildObstacles(artifact.seed), [artifact.seed]);
+  const schedule = useMemo(() => buildRods(artifact.seed), [artifact.seed]);
   const buckets = useMemo(() => bucketInputs(artifact.inputLog as InputEvent[]), [artifact.inputLog]);
 
   const [step, setStep] = useState(0);
@@ -72,14 +67,13 @@ export default function DuckRunReplay({ artifact }: { artifact: ReplayArtifact }
   const [speed, setSpeed] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Re-simulate up to `step` for a scrub-accurate frame (cheap: integer sim).
   useEffect(() => {
     const st = initState();
     while (st.alive && st.step < step) {
       stepState(st, schedule, buckets.get(st.step) ?? []);
     }
     const ctx = canvasRef.current?.getContext("2d");
-    if (ctx) drawFrame(ctx, st, null);
+    if (ctx) drawFrame(ctx, st, null, 0);
   }, [step, schedule, buckets]);
 
   useEffect(() => {
@@ -114,7 +108,7 @@ export default function DuckRunReplay({ artifact }: { artifact: ReplayArtifact }
           <option value={1}>1×</option><option value={2}>2×</option><option value={4}>4×</option>
         </select>
         <span className="replay-meta">
-          step {step}/{analysis.endStep} · cleared {analysis.cleared} · final {analysis.finalScore.toLocaleString()}
+          step {step}/{analysis.endStep} · cleared {analysis.cleared} · misses {analysis.misses} · final {analysis.finalScore.toLocaleString()}
         </span>
       </div>
     </div>

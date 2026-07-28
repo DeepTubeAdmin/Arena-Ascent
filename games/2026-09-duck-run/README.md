@@ -1,17 +1,22 @@
 # Duck Run (2026-09)
 
-Jump the low walls (UP / W / Space). Duck the high bars (DOWN / S, hold).
-One lane, one life, exponentially accelerating obstacles.
+A tribute to **Twisted System** (Fuzion Frenzy, Xbox 2001). Jump the LOW green
+rods (UP / W / Space). Duck the HIGH blue rods (DOWN / S, hold). The track
+accelerates relentlessly.
 
-- ONE shared seed per round: identical obstacle schedule for every player.
-- 6-second practice stretch with no obstacles (keys shown on screen).
-- Speed ×1.12 every 10 seconds (integer table): casual players fall inside
-  two minutes; reaction windows drop below human limits (~107ms) by ~5 min,
-  making longer survival impossible by design.
-- Scoring: +1 per step survived, + (40 + wave×12) per obstacle cleared —
-  late-game obstacles pay many times more than early ones.
+**Faithful core rule:** a hit does NOT end your run — it knocks you backward
+toward the water. You survive 6 hits; the 7th puts you in the drink. The HUD's
+FOOTING pips show what's left.
+
+- ONE shared seed per round: identical rod schedule for every player.
+- 6-second practice stretch with no rods (controls + rules shown on screen).
+- Speed x1.12 every 10 seconds (integer table): roughly doubles each minute;
+  reaction windows drop below human limits (~107ms) by ~5 minutes.
+- Scoring: +1 per step survived, +(40 + wave x12) per rod cleared — late rods
+  pay many times more than early ones, so surviving the ramp is what wins.
 - Integer math, fixed 16ms timestep, 6-minute hard cap (unreachable).
+- Rendering uses sub-step interpolation (cosmetic only) and a throttled React
+  HUD, per the performance requirements in ADDING_A_MONTHLY_GAME.md.
 
-Deterministic contract: `simulate(seed, inputLog)` reproduces the exact run and
-score. The obstacle schedule is precomputed from the seed before any input is
-read; RNG consumption never depends on player behavior.
+Deterministic contract: `simulate(seed, inputLog)` reproduces the exact run.
+The rod schedule is precomputed from the seed before any input is read.
