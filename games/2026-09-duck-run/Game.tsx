@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameProps, InputEvent } from "../../shared/types";
 import {
   STEP_MS, MAX_STEPS, GRACE_STEPS, X_SPAWN, PLAYER_W, OB_W, MAX_HITS,
-  buildObstacles, initState, stepState, airborne, speedAt, waveAt,
+  buildObstacles, initState, stepState, airborne, isDucking, speedAt, waveAt,
   type RunState, type Obstacle,
 } from "./sim";
 
@@ -50,7 +50,7 @@ export function drawFrame(
     const into = JUMP_TOTAL - (st.jumpUntil - st.step) + frac;
     const t = Math.min(1, Math.max(0, into / JUMP_TOTAL));
     py = GROUND - ph - 4 * 60 * t * (1 - t);      // continuous arc
-  } else if (st.ducking) {
+  } else if (isDucking(st)) {
     ph = 22; py = GROUND - ph;
   }
   // flash on the step you get clobbered

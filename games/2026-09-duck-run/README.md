@@ -1,8 +1,14 @@
 # Duck Run (2026-09)
 
 A tribute to **Twisted System** (Fuzion Frenzy, Xbox 2001). Jump the LOW green
-rods (UP / W / Space). Duck the HIGH blue rods (DOWN / S, hold). The track
+rods (UP / W / Space). Duck the HIGH blue rods (DOWN / S). The track
 accelerates relentlessly.
+
+**Both actions are timed.** A jump holds you airborne 480ms; a duck holds you
+low 576ms and then you stand back up automatically — holding the key does NOT
+extend it (no duck-camping under every high rod). Release-and-press to duck
+again; releasing early stands you up early. Ducking takes timing, exactly like
+jumping.
 
 **Faithful core rule:** a hit does NOT end your run — it knocks you backward
 toward the water. You survive 6 hits; the 7th puts you in the drink. The HUD's

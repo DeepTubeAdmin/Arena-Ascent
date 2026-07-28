@@ -22,6 +22,10 @@ export const X_SPAWN = 12000;                  // rod spawn distance (units)
 export const PLAYER_W = 600;                   // player hitbox width (units)
 export const OB_W = 700;                       // rod width (units)
 export const JUMP_STEPS = 30;                  // airborne 480ms per jump
+export const DUCK_STEPS = 36;                  // ducked 576ms per press — a duck
+                                               // TIMES OUT slightly after a jump
+                                               // lands; holding the key cannot
+                                               // extend it (no duck-camping)
 export const BASE_SPEED = 60;                  // units/step at wave 0
 export const MAX_HITS = 7;                     // 7th hit = in the water
 
@@ -87,7 +91,7 @@ export interface RunState {
   cleared: number;      // rods successfully jumped/ducked
   hits: number;         // rods taken to the face (7th ends the run)
   jumpUntil: number;    // airborne while step < jumpUntil
-  ducking: boolean;
+  duckUntil: number;    // ducked while step < duckUntil (auto-expires)
   nextSpawn: number;    // index into schedule
   active: { x: number; kind: ObKind; spawnStep: number; resolved: boolean }[];
   lastHitStep: number;  // for the knockback render flash (-1 = none)
@@ -96,7 +100,7 @@ export interface RunState {
 
 export function initState(): RunState {
   return { step: 0, alive: true, score: 0, cleared: 0, hits: 0, jumpUntil: -1,
-           ducking: false, nextSpawn: 0, active: [], lastHitStep: -1, deathStep: -1 };
+           duckUntil: -1, nextSpawn: 0, active: [], lastHitStep: -1, deathStep: -1 };
 }
 
 export function bucketInputs(log: InputEvent[]): Map<number, InputEvent[]> {
@@ -110,6 +114,7 @@ export function bucketInputs(log: InputEvent[]): Map<number, InputEvent[]> {
 }
 
 export function airborne(st: RunState): boolean { return st.step < st.jumpUntil; }
+export function isDucking(st: RunState): boolean { return st.step < st.duckUntil; }
 
 /** Advance exactly one step: inputs, then spawning, motion, resolution.
     Pure w.r.t. (schedule, inputs) — no wall clock, no RNG, no floats. */
@@ -119,12 +124,12 @@ export function stepState(st: RunState, schedule: Obstacle[], inputs: InputEvent
   for (const e of inputs) {
     if (e.type !== "key") continue;
     const action = (e.data as any)?.action;
-    if (action === "jump" && !airborne(st) && !st.ducking) {
+    if (action === "jump" && !airborne(st) && !isDucking(st)) {
       st.jumpUntil = st.step + JUMP_STEPS;
     } else if (action === "duckDown" && !airborne(st)) {
-      st.ducking = true;
+      st.duckUntil = st.step + DUCK_STEPS;   // timed, like a jump
     } else if (action === "duckUp") {
-      st.ducking = false;
+      st.duckUntil = -1;                      // standing up early is allowed
     }
   }
 
@@ -145,7 +150,7 @@ export function stepState(st: RunState, schedule: Obstacle[], inputs: InputEvent
     // Resolve ONCE, the first step the rod overlaps the player.
     if (!o.resolved && o.x < PLAYER_W && o.x + OB_W > 0) {
       o.resolved = true;
-      const safe = o.kind === 0 ? airborne(st) : st.ducking;
+      const safe = o.kind === 0 ? airborne(st) : isDucking(st);
       if (safe) {
         // cleared — late rods pay far more than early ones
         st.cleared++;
@@ -154,7 +159,7 @@ export function stepState(st: RunState, schedule: Obstacle[], inputs: InputEvent
         // HIT: knocked backward toward the water. Not fatal until the 7th.
         st.hits++;
         st.lastHitStep = st.step;
-        st.ducking = false;
+        st.duckUntil = -1;
         st.jumpUntil = -1;          // stumble: reset air/duck state
         if (st.hits >= MAX_HITS) {
           st.alive = false;

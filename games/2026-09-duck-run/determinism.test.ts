@@ -1,23 +1,24 @@
 import { describe, it, expect } from "vitest";
 import {
-  simulate, buildObstacles, GRACE_STEPS, STEP_MS, MAX_HITS,
-  X_SPAWN, OB_W, speedAt, MIN_GAP_STEPS,
+  simulate, buildObstacles, initState, stepState, isDucking,
+  GRACE_STEPS, STEP_MS, MAX_HITS, DUCK_STEPS,
+  X_SPAWN, OB_W, PLAYER_W, speedAt, MIN_GAP_STEPS,
 } from "./sim";
 import type { InputEvent } from "../../shared/types";
 
 const SEED = "test-seed-duck";
 
 function scriptedRun(n = 6): InputEvent[] {
-  // React correctly to the first n rods of THIS seed's schedule.
+  // React correctly to the first n rods of THIS seed's schedule, timing each
+  // action just before the rod reaches the player (ducks time out now, so
+  // acting early no longer works — as intended).
   const schedule = buildObstacles(SEED);
   const log: InputEvent[] = [];
   for (const o of schedule.slice(0, n)) {
-    const actMs = (o.spawnStep + 60) * STEP_MS;
+    const arrive = o.spawnStep + Math.floor((X_SPAWN - PLAYER_W) / speedAt(o.spawnStep));
+    const actMs = (arrive - 6) * STEP_MS;
     if (o.kind === 0) log.push({ t: actMs, type: "key", data: { action: "jump" } });
-    else {
-      log.push({ t: actMs, type: "key", data: { action: "duckDown" } });
-      log.push({ t: actMs + 900, type: "key", data: { action: "duckUp" } });
-    }
+    else log.push({ t: actMs, type: "key", data: { action: "duckDown" } });
   }
   return log;
 }
@@ -82,6 +83,19 @@ describe("duck run determinism", () => {
       expect(schedule[i + 1].spawnStep - schedule[i].spawnStep)
         .toBeGreaterThanOrEqual(MIN_GAP_STEPS);
     }
+  });
+
+  it("a duck times out — holding DOWN cannot duck forever", () => {
+    // Press duck once at step 0 and never release: by DUCK_STEPS later the
+    // player must be standing again (rods start only after GRACE_STEPS, so
+    // nothing else interferes).
+    const schedule = buildObstacles(SEED);
+    const st = initState();
+    const buckets = new Map([[0, [{ t: 0, type: "key", data: { action: "duckDown" } } as InputEvent]]]);
+    while (st.step < DUCK_STEPS + 5) {
+      stepState(st, schedule, buckets.get(st.step) ?? []);
+    }
+    expect(isDucking(st)).toBe(false);
   });
 
   it("clearing rods beats eating them", () => {
