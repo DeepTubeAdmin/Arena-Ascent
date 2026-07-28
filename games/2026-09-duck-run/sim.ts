@@ -46,18 +46,36 @@ export function waveAt(step: number): number {
   return Math.floor(step / WAVE_STEPS);
 }
 
+/** Target rods visible on screen at once, in TENTHS (25 = 2.5 rods).
+    Spacing is defined RELATIVE to how long a rod takes to cross the screen,
+    NOT as a fixed number of steps — a fixed gap would make the track look
+    emptier and emptier as the speed ramp shortens each rod's time on screen. */
+export const TARGET_ON_SCREEN_TENTHS = 25;
+
+/** Absolute floor between rods. A jump is airborne JUMP_STEPS (30); you must
+    be able to land before the next rod resolves, or the game stops being a
+    skill test and becomes a coin flip. */
+export const MIN_GAP_STEPS = 38;
+
 /** Precompute the full rod schedule from the seed. Same seed → same run for
-    every player. Gaps tighten as waves rise, on top of the speed ramp. */
+    every player. Density holds steady as the track accelerates; once rods
+    cross faster than a jump can recover, the floor takes over. */
 export function buildObstacles(seed: string): Obstacle[] {
   const rng = makePRNG("duck-run:" + seed);
   const obs: Obstacle[] = [];
   let step = GRACE_STEPS;                       // 6s of open track first
   while (step < MAX_STEPS) {
-    const w = waveAt(step);
     obs.push({ spawnStep: step, kind: (randInt(rng, 0, 1) as ObKind) });
-    const gapMin = Math.max(34, 110 - w * 3);
-    const gapMax = Math.max(50, 170 - w * 4);
-    step += randInt(rng, gapMin, gapMax);
+
+    // steps a rod needs to travel from spawn to fully off-screen
+    const travelSteps = Math.floor((X_SPAWN + OB_W) / speedAt(step));
+    // gap that keeps TARGET_ON_SCREEN_TENTHS/10 rods in view
+    const target = Math.floor((travelSteps * 10) / TARGET_ON_SCREEN_TENTHS);
+    const base = Math.max(MIN_GAP_STEPS, target);
+    const jitter = Math.floor(base / 6);        // ±~17%, seed-derived
+    const lo = Math.max(MIN_GAP_STEPS, base - jitter);
+    const hi = Math.max(lo + 4, base + jitter);
+    step += randInt(rng, lo, hi);
   }
   return obs;
 }

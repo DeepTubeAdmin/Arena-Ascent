@@ -129,6 +129,35 @@ breaks determinism and fairness. All smoothness comes from rendering:
 
 ---
 
+## Obstacle density and spacing (learned from Duck Run)
+
+7. **Define spacing RELATIVE to travel time, never as a fixed step count.**
+   An object's time on screen is `distance / speed`. If speed ramps but the
+   gap between spawns is a fixed number of steps, the field gets EMPTIER as
+   the game gets faster — the opposite of escalation, and it looks broken.
+   Compute `travelSteps = distance / speedAt(step)` and derive the gap from
+   it (e.g. `travelSteps / 2.5` keeps ~2.5 objects on screen at all times).
+
+8. **Keep at least ~2 obstacles visible during the phase where most runs
+   happen.** A single object crossing an empty field reads as sparse and gives
+   the player nothing to plan against. Two-plus in view creates the "read
+   ahead and prepare" pressure that makes escalation feel dangerous.
+
+9. **Floor the gap at the player's recovery time — this is a FAIRNESS rule,
+   not a difficulty knob.** If objects can arrive faster than an action
+   completes (e.g. a 480ms jump), survival starts depending on which sequence
+   the seed happened to deal — jump-then-jump might save you mid-air while
+   jump-then-duck is unavoidable. That is a chance element deciding outcomes,
+   which rule 5 forbids. Set an absolute minimum gap ≥ the longest committed
+   action, and accept that density naturally falls below 2 at extreme speeds.
+
+10. **Verify density with a test, not by eye.** Assert that across the early/
+    mid game the computed `travelSteps / gap` stays above your target, and
+    that no gap ever drops below the recovery floor. Both are cheap regression
+    tests and both catch tuning mistakes that are invisible in code review.
+
+---
+
 ## What you deliver each month
 
 Three code pieces plus one registration entry:

@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { simulate, buildObstacles, GRACE_STEPS, STEP_MS, MAX_HITS } from "./sim";
+import {
+  simulate, buildObstacles, GRACE_STEPS, STEP_MS, MAX_HITS,
+  X_SPAWN, OB_W, speedAt, MIN_GAP_STEPS,
+} from "./sim";
 import type { InputEvent } from "../../shared/types";
 
 const SEED = "test-seed-duck";
@@ -55,6 +58,30 @@ describe("duck run determinism", () => {
     // died on the 7th rod, not the 1st
     const schedule = buildObstacles(SEED);
     expect(st.deathStep).toBeGreaterThanOrEqual(schedule[MAX_HITS - 1].spawnStep);
+  });
+
+  it("keeps ~2+ rods on screen through the early/mid game", () => {
+    // Spacing is relative to travel time, so density must NOT thin out as the
+    // track accelerates. Checked over the window where nearly all runs happen.
+    const schedule = buildObstacles(SEED);
+    for (let i = 0; i < schedule.length - 1; i++) {
+      const step = schedule[i].spawnStep;
+      if (step > 5000) break;                       // first ~80 seconds
+      const gap = schedule[i + 1].spawnStep - step;
+      const travel = Math.floor((X_SPAWN + OB_W) / speedAt(step));
+      const onScreen = travel / gap;
+      expect(onScreen).toBeGreaterThan(1.9);
+    }
+  });
+
+  it("never spaces rods closer than a jump can recover", () => {
+    // Sub-jump gaps would make survival depend on the seed's rod sequence
+    // rather than skill — a chance element, which the design rules forbid.
+    const schedule = buildObstacles(SEED);
+    for (let i = 0; i < schedule.length - 1; i++) {
+      expect(schedule[i + 1].spawnStep - schedule[i].spawnStep)
+        .toBeGreaterThanOrEqual(MIN_GAP_STEPS);
+    }
   });
 
   it("clearing rods beats eating them", () => {

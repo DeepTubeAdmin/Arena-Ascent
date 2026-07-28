@@ -12,6 +12,9 @@ FOOTING pips show what's left.
 - 6-second practice stretch with no rods (controls + rules shown on screen).
 - Speed x1.12 every 10 seconds (integer table): roughly doubles each minute;
   reaction windows drop below human limits (~107ms) by ~5 minutes.
+- Spacing is RELATIVE to travel time (~2.5 rods on screen), not a fixed step
+  count — fixed gaps would thin the track out as speed rises. A floor of
+  MIN_GAP_STEPS keeps every rod individually answerable.
 - Scoring: +1 per step survived, +(40 + wave x12) per rod cleared — late rods
   pay many times more than early ones, so surviving the ramp is what wins.
 - Integer math, fixed 16ms timestep, 6-minute hard cap (unreachable).
