@@ -88,6 +88,12 @@ export default function EntryPanel({
         </div>
       </div>
 
+      <div className="join-window-notice">
+        ⚠ ONE MINUTE TO JOIN: when the countdown hits zero and the arena
+        opens, you have <b>60 seconds</b> to press Play. Be signed in and
+        waiting before it opens — attempts cannot be started after the join
+        window closes, and missed windows are not refunded.
+      </div>
       <p className="entry-note">
         If you enter, the pool becomes {fmt(projectedPool)} {symbol} {usd(projectedPool)} and the winner's
         take becomes {fmt(projectedTake)} {symbol} {usd(projectedTake)}. One entry per wallet. One attempt.

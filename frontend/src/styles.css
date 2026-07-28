@@ -334,3 +334,16 @@ h1, .page-title {
   border-bottom: 1px solid var(--gold);
 }
 .contract-link:hover { color: var(--gold-bright); border-color: var(--gold-bright); }
+
+/* ---- pending-review + join-window notices ---- */
+.review-notice {
+  margin: 18px auto 0; max-width: 520px; padding: 12px 16px;
+  border: 1px solid var(--gold); border-radius: 4px;
+  color: var(--gold); font-size: 15px; text-align: center;
+}
+.join-window-notice {
+  margin: 18px 0 0; padding: 12px 16px;
+  border: 1px solid var(--gold); border-radius: 4px;
+  color: var(--cream); font-size: 14.5px; line-height: 1.55;
+}
+.join-window-notice b { color: var(--gold); }

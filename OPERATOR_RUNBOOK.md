@@ -281,3 +281,89 @@ test multiple players.
    (carefully, not `npm audit fix --force`).
 5. Full Sepolia dress rehearsal, then a tiny-stakes real round on Arbitrum One,
    verifying the 85/15 math on Arbiscan with real value.
+
+
+---
+
+# Part E — Two environments: PRODUCTION (real money) and STAGING (rehearsal)
+
+From launch day onward there are two complete, separate copies of Arena Ascent.
+NEVER confuse them. Check which one you're in before every operator action.
+
+## E1. The two environments at a glance
+
+|                | PRODUCTION                     | STAGING                          |
+|----------------|--------------------------------|----------------------------------|
+| Purpose        | Real players, REAL MONEY       | Testing changes, play money      |
+| Network        | Arbitrum One                   | Arbitrum Sepolia                 |
+| Contract       | (fill in after mainnet deploy) | 0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E |
+| Website        | arenaascent.com                | staging--(site).netlify.app      |
+| Backend        | current Railway service        | second Railway service (staging) |
+| Database       | current Railway Postgres       | staging Postgres (separate)      |
+| Git branch     | main                           | staging                          |
+| ETH            | REAL — treat like cash         | worthless testnet ETH            |
+
+Rule of thumb: the network name in MetaMask tells you where you are. If
+MetaMask says "Arbitrum One", every click costs/moves real money.
+
+## E2. One-time staging setup (do BEFORE the mainnet deploy)
+
+1. Create the branch:
+   cd ~/arena-ascent && git checkout -b staging && git push -u origin staging
+   then: git checkout main
+2. Netlify -> Site configuration -> Build & deploy -> Branches and deploy
+   contexts -> add "staging" as a Branch deploy. Then in Environment
+   variables, scope values per context: the production context gets mainnet
+   values (set in E4); the staging branch context keeps today's Sepolia
+   values (VITE_CHAIN=arbitrumSepolia, VITE_CONTRACT_ADDRESS=0x360c...,
+   VITE_API_URL=<staging backend URL from step 3>).
+3. Railway -> New service from the same GitHub repo, deploy branch set to
+   "staging". Add a NEW Postgres and NEW Redis for it. Copy all backend
+   variables from the current service, then point DATABASE_URL / REDIS_URL
+   at the new instances and keep CONTRACT_ADDRESS / RPC_URL on the Sepolia
+   values. Load the schema into the new Postgres:
+   psql "<staging DATABASE_URL>" -f backend/schema.sql
+4. Verify staging end-to-end: open the staging URL and run one full Sepolia
+   round on it. The current Sepolia contract lives here permanently as the
+   rehearsal space.
+
+## E3. Day-to-day workflow after launch
+
+- ALL changes go to staging first:
+  git checkout staging -> apply changes -> push -> test on the staging URL.
+- Promote ONLY between production rounds, never while a round is open or
+  holding funds: git checkout main && git merge staging && git push.
+- Production deploys still follow the old rules: watch Netlify AND Railway go
+  green; a red build means the old version silently stays live.
+- Database migrations (ALTER TABLE) run TWICE: against staging Postgres when
+  testing, against production Postgres at promotion — BEFORE the new code
+  path is exercised.
+
+## E4. Mainnet cutover checklist (production values)
+
+After the mainnet contract is deployed and verified (walkthrough in chat):
+1. Local backend/.env AND Railway PRODUCTION service variables:
+   CONTRACT_ADDRESS=(mainnet addr), RPC_URL=(Arbitrum One RPC).
+2. Local frontend/.env AND Netlify PRODUCTION context:
+   VITE_CONTRACT_ADDRESS=(mainnet addr), VITE_CHAIN=arbitrum.
+   Then Trigger deploy WITHOUT cache.
+3. Production database: clear the old Sepolia test data so history starts
+   clean (staging keeps its own separate DB):
+   psql "<prod DATABASE_URL>" -c "TRUNCATE settlements, sessions, entrants, rounds;"
+4. Verify: arenaascent.com FAQ contract link opens arbiscan.io (NOT
+   sepolia.arbiscan.io) at the mainnet address; the Test page demands
+   "Arbitrum One"; /rounds/current returns {"round":null}.
+5. SOFT LAUNCH: run round 1 with a tiny entry fee using your own two wallets
+   end-to-end (enter -> live -> play -> settle -> withdraw fee BEFORE claim ->
+   claim -> Champions entry appears) before announcing to anyone. Real money
+   changes the cost of every operator mistake in this book.
+
+## E5. Operator hygiene with real funds
+
+- The owner key now controls real money. Use a dedicated fresh key, ideally
+  on a hardware wallet; seed phrase on paper in two separate places.
+  (Multisig deferred by explicit decision — revisit at the tripwire; see
+  CLAUDE.md.)
+- Double-check entry-fee zeros on EVERY mainnet createRound: a miscount is
+  now a real-money mistake. 0.0001 ETH = 100000000000000 (14 zeros).
+- Never experiment on production. That is what staging exists for.

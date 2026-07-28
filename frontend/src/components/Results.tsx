@@ -99,11 +99,18 @@ export default function Results({ round, address }: { round: RoundInfo; address?
       {!results?.winner ? (
         <>
           <div className="eyebrow">WINDOW CLOSED</div>
-          <h1 className="page-title">Verifying the arena</h1>
+          <h1 className="page-title">Nothing is final yet</h1>
           <p className="sub">
-            Scores are being verified and the winning run is under human replay
-            review. The winner is submitted on-chain after approval.
+            Every top run is now under human replay review for cheating.
+            <b> Cheaters are disqualified — and when they are, everyone below
+            them moves up.</b> Second or third right now can still take the
+            entire pool. The champion is only official once the winner is
+            verified and submitted on-chain.
           </p>
+          <div className="review-notice">
+            Sitting at #2 or #3? Don't leave — check back until the champion
+            is crowned. Disqualifications happen.
+          </div>
         </>
       ) : (
         <div className="champion">
@@ -125,7 +132,7 @@ export default function Results({ round, address }: { round: RoundInfo; address?
       )}
       {results?.leaderboard?.length > 0 && (
         <table className="board">
-          <thead><tr><th>#</th><th>Player</th><th>Score</th></tr></thead>
+          <thead><tr><th>#</th><th>Player</th><th>Score{!results?.winner ? " (provisional)" : ""}</th></tr></thead>
           <tbody>
             {results.leaderboard.map((r: any) => (
               <tr key={r.address} className={r.rank === 1 ? "first" : ""}>
