@@ -10,5 +10,5 @@
 [context."staging".environment]
   VITE_CHAIN = "arbitrumSepolia"
   VITE_CONTRACT_ADDRESS = "0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E"
-  VITE_API_URL = "https://postgresql://postgres:wCzefiFtYlypCHzyqsEkqLWNxxZxBOgP@sakura.proxy.rlwy.net:50028/railway"
+  VITE_API_URL = "https://backend-staging-production-9bbd.up.railway.app"
   VITE_USDC_ADDRESS = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"
