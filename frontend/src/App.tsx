@@ -40,6 +40,19 @@ export default function App() {
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [me, setMe] = useState<{ entered: boolean; session: any } | null>(null);
   const [view, setView] = useState<"arena" | "faq" | "terms" | "champions" | "test" | "admin">("arena");
+
+  // Per-view document titles (SEO/UX: tabs, history, bookmarks)
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      arena: "Arena Ascent — Monthly Winner-Takes-All Skill Tournament",
+      faq: "How It Works — Arena Ascent",
+      champions: "Champions — Arena Ascent Hall of Fame",
+      test: "Test Your Setup — Arena Ascent",
+      terms: "Terms of Service — Arena Ascent",
+      admin: "Operator — Arena Ascent",
+    };
+    document.title = titles[view] ?? titles.arena;
+  }, [view]);
   const [err, setErr] = useState("");
   const [showInstall, setShowInstall] = useState(false);
 
