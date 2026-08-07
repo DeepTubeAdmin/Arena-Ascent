@@ -168,6 +168,39 @@ export default function FAQ() {
       </section>
 
       <section className="faq-section">
+        <h2>Protect your wallet: the Secret Recovery Phrase</h2>
+        <p>
+          When you create a MetaMask wallet, it shows you a <b>Secret Recovery
+          Phrase</b> — 12 ordinary words in a specific order. Understand what
+          it is: <b>those words ARE your wallet.</b> Anyone who has them
+          controls your funds from any device on Earth, and no one — not
+          MetaMask, not Arena Ascent, not anyone — can restore them for you if
+          they're lost.
+        </p>
+        <p>
+          <b>Write the phrase on paper and store it somewhere safe.</b> Ideally
+          two copies in two places. Never store it in a screenshot, a text
+          file, an email, a password manager note, or a photo — anything on a
+          device can be stolen by malware. Paper can't be hacked.
+        </p>
+        <p>
+          <b>Your MetaMask password is not your wallet.</b> The password only
+          unlocks MetaMask on that one browser. Forget the password? No
+          problem — reinstall MetaMask and restore with your recovery phrase.
+          But if you lose the phrase AND lose access to the device, <b>your
+          funds are gone permanently.</b> There is no "forgot my phrase" reset,
+          by design.
+        </p>
+        <p>
+          And the scam rule that protects you from 90% of crypto theft:
+          <b> no legitimate person, site, or support channel will EVER ask for
+          your recovery phrase.</b> Not us, not MetaMask support, not anyone
+          "helping" you in a Discord DM. Anyone who asks is stealing from you.
+          Close the window.
+        </p>
+      </section>
+
+      <section className="faq-section">
         <h2>Getting ETH on Arbitrum — read this carefully</h2>
         <p>
           Entry fees are paid in <b>ETH on the Arbitrum network</b> (also called
@@ -220,9 +253,16 @@ export default function FAQ() {
           rest.
         </p>
         <p>
-          <b>Option C — Bridge ETH you already have on Ethereum mainnet.</b> If
-          your ETH is already sitting on Ethereum L1, a "bridge" moves it across
-          to Arbitrum. The official route is the <b>Arbitrum Bridge</b> at
+          <b>Option C — Buy ETH first, then move it to Arbitrum.</b> This also
+          covers the common case where buying on Arbitrum directly isn't
+          available to you: buy ETH the normal way — MetaMask's Buy button with
+          the network set to Ethereum, or on an exchange with a withdrawal sent
+          to your MetaMask address on the Ethereum network — so the ETH lands
+          in your wallet on Ethereum mainnet. Then convert it: MetaMask's
+          built-in <b>Bridge</b> (or Swap, when it offers a cross-network
+          route) moves your mainnet ETH to Arbitrum ETH from inside the wallet
+          in a few clicks. The same works for ETH you already had on Ethereum
+          from before — a "bridge" simply moves it across. The official route is the <b>Arbitrum Bridge</b> at
           bridge.arbitrum.io: connect your wallet, choose Ethereum → Arbitrum
           One, enter the amount of ETH, and confirm. You'll pay an Ethereum
           mainnet gas fee for the bridging transaction (this is the expensive

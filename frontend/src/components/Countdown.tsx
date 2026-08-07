@@ -16,6 +16,22 @@ export default function Countdown({ target, label }: { target: string | null; la
   const s = Math.floor((ms % 60_000) / 1000);
   const pad = (n: number) => String(n).padStart(2, "0");
 
+  // "August 28th, 8:00 PM CDT" — rendered in the VIEWER'S timezone.
+  // toLocaleString uses the browser's locale/zone, and timeZoneName:"short"
+  // appends the zone abbreviation so nobody has to do timezone math.
+  const dt = new Date(target);
+  const day = dt.getDate();
+  const suffix =
+    day % 10 === 1 && day !== 11 ? "st"
+    : day % 10 === 2 && day !== 12 ? "nd"
+    : day % 10 === 3 && day !== 13 ? "rd"
+    : "th";
+  const month = dt.toLocaleString(undefined, { month: "long" });
+  const time = dt.toLocaleString(undefined, {
+    hour: "numeric", minute: "2-digit", timeZoneName: "short",
+  });
+  const whenLocal = `${month} ${day}${suffix}, ${time}`;
+
   return (
     <div className="countdown">
       <div className="countdown-label">{label}</div>
@@ -25,6 +41,7 @@ export default function Countdown({ target, label }: { target: string | null; la
         <span>{pad(m)}<em>m</em></span>
         <span>{pad(s)}<em>s</em></span>
       </div>
+      <div className="countdown-when">{whenLocal}</div>
     </div>
   );
 }

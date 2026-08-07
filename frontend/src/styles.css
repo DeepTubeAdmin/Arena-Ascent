@@ -347,3 +347,9 @@ h1, .page-title {
   color: var(--cream); font-size: 14.5px; line-height: 1.55;
 }
 .join-window-notice b { color: var(--gold); }
+
+/* ---- local date/time under the countdown ---- */
+.countdown-when {
+  margin-top: 6px; font-family: var(--font-mono); font-size: 15px;
+  letter-spacing: 0.06em; color: var(--dim);
+}
