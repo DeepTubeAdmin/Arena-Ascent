@@ -9,11 +9,46 @@ the addresses change but the flow is identical.
 
 ---
 
-## Your key facts
+## Your key facts — TWO ENVIRONMENTS
 
+There are two complete copies of Arena Ascent. Every instruction in this book
+works on either — but always know which one you're operating. Check the
+MetaMask network name before every on-chain action: "Arbitrum One" = REAL MONEY.
+
+### PRODUCTION (real money)
 | Thing | Value |
 |---|---|
-| Contract address | `0xBE1E0Dc13Be1CEb1808073a87DEA4D995aFeD4E6` |
+| Network | Arbitrum One (chain id `42161`) |
+| Contract | `0x71408B7f0685FBE773969086Ff78646e51b7127B` |
+| Explorer | `https://arbiscan.io/address/0x71408B7f0685FBE773969086Ff78646e51b7127B` |
+| Operator wallet | `0x507464249880203c95f333Cd64573DecD6a31066` (owner + oracle) |
+| Website | `https://arenaascent.com` |
+| Backend | `https://arena-ascent-production.up.railway.app` |
+| Database (psql) | `postgresql://postgres:zinOtgXftUSlpGeCvsLzpPLEbZOZXSWL@tokaido.proxy.rlwy.net:23717/railway` |
+| USDC (dormant) | `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` |
+| Git branch | `main` |
+| Netlify config | plain UI environment variables (production values) |
+
+### STAGING (play money, permanent rehearsal space)
+| Thing | Value |
+|---|---|
+| Network | Arbitrum Sepolia (chain id `421614`) |
+| Contract | `0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E` |
+| Explorer | `https://sepolia.arbiscan.io/address/0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E` |
+| Operator wallet | `0x52E552063aC1aE24E0f55B87BB89502bd6eaAE1B` |
+| Website | `https://staging--arenaascent.netlify.app` |
+| Backend (service: backend-staging) | `https://backend-staging-production-9bbd.up.railway.app` |
+| Database (psql) | `postgresql://postgres:wCzefiFtYlypCHzyqsEkqLWNxxZxBOgP@sakura.proxy.rlwy.net:50028/railway` |
+| Git branch | `staging` |
+| Netlify config | pinned in `frontend/netlify.toml` `[context."staging".environment]` (overrides UI) |
+
+Shared: ETH "asset" value = `0x0000000000000000000000000000000000000000`.
+Real-money fee example: $10 ≈ `5200000000000000` wei at ~$1.9k/ETH (recompute
+per round; ALWAYS count zeros and read back `entryFee` on the explorer).
+Testnet fee example: 0.0001 ETH = `100000000000000` (14 zeros).
+
+---|---|
+| Contract address | the environment's contract (key facts) |
 | Your owner/operator wallet | `0x52E552063aC1aE24E0f55B87BB89502bd6eaAE1B` |
 | Network | Arbitrum Sepolia (chain id `421614`) |
 | Test USDC token | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` |
@@ -21,7 +56,7 @@ the addresses change but the flow is identical.
 | Backend | `http://localhost:8787` |
 | Frontend | `http://localhost:5173` |
 
-Explorer: `https://sepolia.arbiscan.io/address/0xBE1E0Dc13Be1CEb1808073a87DEA4D995aFeD4E6`
+Explorer: `the environment's explorer link (key facts)`
 
 ---
 
@@ -50,6 +85,10 @@ You drive every state change by hand.
 ---
 
 ## PART A — The normal ("happy path") round
+
+> Applies to BOTH environments. Use the key-facts table for the right
+> contract, explorer, website, wallet, and database. On production every
+> entry fee, prize, and gas payment is REAL.
 
 ### A1. Start the system
 See `RESTART_GUIDE.md`: Postgres up, Redis up, backend running, frontend
@@ -285,85 +324,92 @@ test multiple players.
 
 ---
 
-# Part E — Two environments: PRODUCTION (real money) and STAGING (rehearsal)
+# Part E — Operating and changing the two environments
 
-From launch day onward there are two complete, separate copies of Arena Ascent.
-NEVER confuse them. Check which one you're in before every operator action.
+## E1. Which am I in? (check before every action)
 
-## E1. The two environments at a glance
+- MetaMask network name: "Arbitrum One" = production/real money;
+  "Arbitrum Sepolia" = staging/play money.
+- Browser URL: arenaascent.com = production; staging-- prefix = staging.
+- Railway service name: the production backend vs `backend-staging`.
+- Operator sign-in: production admin work uses `0x5074...1066`; staging uses
+  `0x52E5...AE1B`. (Both are currently on both allowlists; the wallets above
+  are the convention. Tightening to one-per-environment is the eventual goal.)
 
-|                | PRODUCTION                     | STAGING                          |
-|----------------|--------------------------------|----------------------------------|
-| Purpose        | Real players, REAL MONEY       | Testing changes, play money      |
-| Network        | Arbitrum One                   | Arbitrum Sepolia                 |
-| Contract       | (fill in after mainnet deploy) | 0x360c59Ff8D0b72C9C2c315EF735abbadeDF77f2E |
-| Website        | arenaascent.com                | staging--(site).netlify.app      |
-| Backend        | current Railway service        | second Railway service (staging) |
-| Database       | current Railway Postgres       | staging Postgres (separate)      |
-| Git branch     | main                           | staging                          |
-| ETH            | REAL — treat like cash         | worthless testnet ETH            |
+## E2. Making a change — the standard workflow (staging first, ALWAYS)
 
-Rule of thumb: the network name in MetaMask tells you where you are. If
-MetaMask says "Arbitrum One", every click costs/moves real money.
+1. Switch to the staging branch:
+   `cd ~/arena-ascent && git checkout staging`
+2. Apply the change (unzip a delivered zip here, or edit files).
+3. `git add . && git commit -m "describe it" && git push`
+   → Netlify builds the staging site; Railway rebuilds backend-staging
+   (only if backend files changed). Watch BOTH go green.
+4. Test on https://staging--arenaascent.netlify.app — actually exercise the
+   thing that changed (run a round if it touches rounds).
+5. Promote to production ONLY between rounds — never while a production round
+   is open, live, or holding unclaimed funds:
+   `git checkout main && git merge staging && git push`
+   → watch production Netlify + Railway go green. Red build = old version
+   silently stays live.
+6. Hard-refresh arenaascent.com and verify the change landed.
 
-## E2. One-time staging setup (do BEFORE the mainnet deploy)
+## E3. Database migrations (ALTER TABLE) — run TWICE, staging first
 
-1. Create the branch:
-   cd ~/arena-ascent && git checkout -b staging && git push -u origin staging
-   then: git checkout main
-2. Netlify -> Site configuration -> Build & deploy -> Branches and deploy
-   contexts -> add "staging" as a Branch deploy. Then in Environment
-   variables, scope values per context: the production context gets mainnet
-   values (set in E4); the staging branch context keeps today's Sepolia
-   values (VITE_CHAIN=arbitrumSepolia, VITE_CONTRACT_ADDRESS=0x360c...,
-   VITE_API_URL=<staging backend URL from step 3>).
-3. Railway -> New service from the same GitHub repo, deploy branch set to
-   "staging". Add a NEW Postgres and NEW Redis for it. Copy all backend
-   variables from the current service, then point DATABASE_URL / REDIS_URL
-   at the new instances and keep CONTRACT_ADDRESS / RPC_URL on the Sepolia
-   values. Load the schema into the new Postgres:
-   psql "<staging DATABASE_URL>" -f backend/schema.sql
-4. Verify staging end-to-end: open the staging URL and run one full Sepolia
-   round on it. The current Sepolia contract lives here permanently as the
-   rehearsal space.
+When a change needs a schema migration, the ALTER runs against EACH database,
+each time BEFORE that environment's new code path is exercised:
 
-## E3. Day-to-day workflow after launch
+- Staging (with the change on the staging branch):
+  `psql "postgresql://postgres:wCzefiFtYlypCHzyqsEkqLWNxxZxBOgP@sakura.proxy.rlwy.net:50028/railway" -c "<ALTER ...>"`
+- Production (at promotion time, before using the feature):
+  `psql "postgresql://postgres:zinOtgXftUSlpGeCvsLzpPLEbZOZXSWL@tokaido.proxy.rlwy.net:23717/railway" -c "<ALTER ...>"`
 
-- ALL changes go to staging first:
-  git checkout staging -> apply changes -> push -> test on the staging URL.
-- Promote ONLY between production rounds, never while a round is open or
-  holding funds: git checkout main && git merge staging && git push.
-- Production deploys still follow the old rules: watch Netlify AND Railway go
-  green; a red build means the old version silently stays live.
-- Database migrations (ALTER TABLE) run TWICE: against staging Postgres when
-  testing, against production Postgres at promotion — BEFORE the new code
-  path is exercised.
+`backend/schema.sql` is kept current — a FRESH database gets everything from
+`psql "<url>" -f backend/schema.sql`; ALTERs are only for existing databases.
 
-## E4. Mainnet cutover checklist (production values)
+## E4. Where each environment's configuration lives (and the traps)
 
-After the mainnet contract is deployed and verified (walkthrough in chat):
-1. Local backend/.env AND Railway PRODUCTION service variables:
-   CONTRACT_ADDRESS=(mainnet addr), RPC_URL=(Arbitrum One RPC).
-2. Local frontend/.env AND Netlify PRODUCTION context:
-   VITE_CONTRACT_ADDRESS=(mainnet addr), VITE_CHAIN=arbitrum.
-   Then Trigger deploy WITHOUT cache.
-3. Production database: clear the old Sepolia test data so history starts
-   clean (staging keeps its own separate DB):
-   psql "<prod DATABASE_URL>" -c "TRUNCATE settlements, sessions, entrants, rounds;"
-4. Verify: arenaascent.com FAQ contract link opens arbiscan.io (NOT
-   sepolia.arbiscan.io) at the mainnet address; the Test page demands
-   "Arbitrum One"; /rounds/current returns {"round":null}.
-5. SOFT LAUNCH: run round 1 with a tiny entry fee using your own two wallets
-   end-to-end (enter -> live -> play -> settle -> withdraw fee BEFORE claim ->
-   claim -> Champions entry appears) before announcing to anyone. Real money
-   changes the cost of every operator mistake in this book.
+- FRONTEND (Vite): values are BAKED AT BUILD TIME.
+  - Production values: Netlify UI environment variables. After changing any
+    `VITE_*` value: Deploys -> Trigger deploy -> WITHOUT cache, or nothing
+    changes.
+  - Staging values: pinned in `frontend/netlify.toml` under
+    `[context."staging".environment]` — these OVERRIDE the UI for staging
+    builds. Editing them = commit on the staging branch.
+- BACKEND: Railway Variables on each service (production service vs
+  `backend-staging`). Saving auto-redeploys that service.
+  - `CHAIN` = `arbitrum` (production) / `arbitrumSepolia` (staging).
+  - `FRONTEND_ORIGIN` must EXACTLY match that environment's site URL, no
+    trailing slash — wrong value = "Failed to fetch" on sign-in (CORS).
+  - `CONTRACT_ADDRESS`, `RPC_URL`, `ORACLE_PRIVATE_KEY` are per-environment.
+    The production oracle key is REAL-MONEY sensitive.
+- ADMIN ACCESS: two lists per environment — `VITE_ADMIN_ADDRESSES` (Netlify
+  UI / staging toml; shows the Operator nav) and `ADMIN_ADDRESSES` (each
+  Railway service; actually authorizes admin API calls). Comma-separated, no
+  spaces. After changing the VITE list: no-cache redeploy, then sign out/in.
+- LOCAL `.env` files (`frontend/.env`, `backend/.env`) mirror PRODUCTION.
+  Running the backend locally performs REAL operator actions on the REAL
+  contract. Local is not a sandbox anymore — staging is the sandbox.
 
-## E5. Operator hygiene with real funds
+## E5. Staging round quirks
 
-- The owner key now controls real money. Use a dedicated fresh key, ideally
-  on a hardware wallet; seed phrase on paper in two separate places.
-  (Multisig deferred by explicit decision — revisit at the tripwire; see
-  CLAUDE.md.)
-- Double-check entry-fee zeros on EVERY mainnet createRound: a miscount is
-  now a real-money mistake. 0.0001 ETH = 100000000000000 (14 zeros).
-- Never experiment on production. That is what staging exists for.
+- Staging shares the Sepolia contract with the old test era: round ids
+  continue an existing sequence (read `nextRoundId` on the explorer, don't
+  assume).
+- Register test-round metadata ONLY on the staging operator page.
+- Staging's database and Champions history are its own; production's started
+  clean at cutover.
+- Sepolia test ETH comes from faucets, as always.
+
+## E6. Real-funds hygiene (production)
+
+- The production wallet `0x5074...1066` is owner AND oracle: it controls fee
+  withdrawal, round state, voiding, and winner submission. Its seed phrase
+  lives on paper in two places. Its private key exists in exactly two other
+  locations: local `backend/.env` and the production Railway service. Nowhere
+  else, ever.
+- Multisig deferred by explicit decision — revisit when pools grow (see
+  CLAUDE.md tripwire). The single key IS the users' refund path: guard it.
+- Count entry-fee zeros on every mainnet createRound, then read back
+  `entryFee` on Arbiscan BEFORE registering metadata.
+- Never experiment on production. Promote between rounds. When in doubt,
+  check E1.
