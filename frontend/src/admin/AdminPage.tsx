@@ -11,8 +11,7 @@ import { getFeeOverrides, friendlyTxError } from "../lib/txFees";
 import { api } from "../lib/api";
 import type { RoundInfo } from "../App";
 import type { ReplayArtifact } from "../../../shared/types";
-import TargetRushReplay from "../../../games/2026-08-target-rush/ReplayView";
-import DuckRunReplay from "../../../games/2026-09-duck-run/ReplayView";
+import { REPLAY_VIEWS } from "../lib/replays";
 
 const ownerAbi = parseAbi([
   "function createRound(address asset, uint96 entryFee, uint64 registrationDeadline, uint16 platformFeeBps) returns (uint256)",
@@ -23,10 +22,6 @@ const ownerAbi = parseAbi([
   "function withdrawFees(address asset, address to)",
 ]);
 
-const REPLAY_VIEWS: Record<string, React.ComponentType<{ artifact: ReplayArtifact }>> = {
-  "2026-08-target-rush": TargetRushReplay,
-  "2026-09-duck-run": DuckRunReplay,
-};
 
 export default function AdminPage({
   authed, round, onChanged,
@@ -256,7 +251,7 @@ function RegisterRoundForm({ onChanged }: { onChanged: () => void }) {
       <input placeholder="on-chain round id" value={roundId} onChange={(e) => setRoundId(e.target.value)} />
       <select value={gameId} onChange={(e) => setGameId(e.target.value)}>
         <option value="2026-08-target-rush">Target Rush (2026-08)</option>
-        <option value="2026-09-duck-run">Duck Run (2026-09)</option>
+        <option value="2026-09-duck-run">Twisted System (2026-09)</option>
         <option value="stub">Stub (pipeline test)</option>
       </select>
       <input type="datetime-local" value={liveStart} onChange={(e) => setLiveStart(e.target.value)} />

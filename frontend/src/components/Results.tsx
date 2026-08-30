@@ -5,6 +5,7 @@ import { useWriteContract, usePublicClient } from "wagmi";
 import { CONTRACT, arenaAbi } from "../lib/wagmi";
 import { getFeeOverrides, friendlyTxError } from "../lib/txFees";
 import { api } from "../lib/api";
+import { REPLAY_VIEWS } from "../lib/replays";
 import type { RoundInfo } from "../App";
 import { RoundState } from "../../../shared/types";
 
@@ -93,6 +94,20 @@ export default function Results({ round, address }: { round: RoundInfo; address?
   }
 
   const winnerScore = results?.leaderboard?.[0]?.score;
+  const [showReplay, setShowReplay] = useState(false);
+  const [artifact, setArtifact] = useState<any>(null);
+  const ReplayView = REPLAY_VIEWS[round.gameId];
+
+  async function toggleWinnerReplay() {
+    if (showReplay) { setShowReplay(false); return; }
+    if (!artifact) {
+      try {
+        const r: any = await api.winnerReplay(round.roundId);
+        setArtifact(r.artifact);
+      } catch { return; }
+    }
+    setShowReplay(true);
+  }
 
   return (
     <main className="results-stage">
@@ -121,6 +136,16 @@ export default function Results({ round, address }: { round: RoundInfo; address?
           </p>
           {typeof winnerScore === "number" && (
             <p className="champion-score">{winnerScore.toLocaleString()}</p>
+          )}
+          {ReplayView && (
+            <button className="link watch-run" onClick={toggleWinnerReplay}>
+              {showReplay ? "Hide the winning run" : "▶ Watch the winning run"}
+            </button>
+          )}
+          {showReplay && artifact && ReplayView && (
+            <div className="public-replay">
+              <ReplayView artifact={artifact} />
+            </div>
           )}
           {isWinner && (
             <button className="btn big gold-btn" onClick={claim} disabled={claimState === "claiming"}>

@@ -148,6 +148,19 @@ app.get("/price/eth", async () => {
   return { usd: ethUsdCache.price };
 });
 
+app.get("/rounds/:id/winner-replay", async (req, reply) => {
+  // PUBLIC: the winning run of a SETTLED round — and only the winner's.
+  // Other players' runs stay private. This is the transparency artifact:
+  // anyone can re-verify the champion's run (same seed + inputs => same score).
+  const { id } = req.params as { id: string };
+  const settled = await q("SELECT winner FROM settlements WHERE round_id=$1", [id]);
+  if (settled.length === 0 || !settled[0].winner) {
+    return reply.code(404).send({ error: "round not settled" });
+  }
+  const artifact = await replayArtifact(id, String(settled[0].winner).toLowerCase());
+  return { artifact, winner: settled[0].winner };
+});
+
 app.get("/champions", async () => {
   // Hall of fame: every settled round, newest first. Prize is computed from
   // the on-chain pool at the round's fee split.

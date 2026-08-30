@@ -353,3 +353,8 @@ h1, .page-title {
   margin-top: 6px; font-family: var(--font-mono); font-size: 15px;
   letter-spacing: 0.06em; color: var(--dim);
 }
+
+/* ---- public winner replays ---- */
+.replay-cell { padding: 12px 8px 20px; }
+.watch-run { display: inline-block; margin-top: 10px; font-size: 15px; }
+.public-replay { margin-top: 16px; }
