@@ -5,14 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import type { InputEvent, RunSummary } from "../../../shared/types";
 import type { RoundInfo } from "../App";
 import { api } from "../lib/api";
-import Countdown from "./Countdown";
 
 // ---- monthly game registry (frontend side) ----
 import TargetRushGame from "../../../games/2026-08-target-rush/Game";
-import DuckRunGame from "../../../games/2026-09-duck-run/Game";
+import TwistedSystemGame from "../../../games/2026-09-duck-run/Game";
 const GAME_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "2026-08-target-rush": TargetRushGame,
-  "2026-09-duck-run": DuckRunGame,
+  "2026-09-duck-run": TwistedSystemGame,
 };
 
 type Phase = "lobby" | "loading" | "ready" | "playing" | "submitted" | "spectating" | "error";
@@ -123,7 +122,6 @@ export default function GameShell({
   return (
     <main>
       <div className="live-badge">● LIVE</div>
-      <Countdown target={round.liveEnd} label="WINDOW CLOSES IN" />
       {phase === "submitted" ? (
         <div className="banner ok">
           Run submitted. Provisional score: <b>{provisional?.toLocaleString()}</b>.

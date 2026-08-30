@@ -358,3 +358,9 @@ h1, .page-title {
 .replay-cell { padding: 12px 8px 20px; }
 .watch-run { display: inline-block; margin-top: 10px; font-size: 15px; }
 .public-replay { margin-top: 16px; }
+
+/* Public winner replays: hide the automation-analysis flags — cheat-review
+   commentary is operator-facing only (the operator console is unaffected;
+   its replay isn't inside these containers). */
+.public-replay .replay-flags,
+.replay-cell .replay-flags { display: none; }
