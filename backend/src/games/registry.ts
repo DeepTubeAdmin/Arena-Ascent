@@ -3,6 +3,7 @@
 import type { GameModule, InputEvent } from "../../../shared/types";
 import { TargetRushModule } from "../../../games/2026-08-target-rush/module";
 import { DuckRunModule } from "../../../games/2026-09-duck-run/module";
+import { TowerStackModule } from "../../../games/2026-10-tower-stack/module";
 
 export const StubModule: GameModule = {
   id: "stub",
@@ -20,6 +21,7 @@ const modules: Record<string, GameModule> = {
   [StubModule.id]: StubModule,
   [TargetRushModule.id]: TargetRushModule,
   [DuckRunModule.id]: DuckRunModule,
+  [TowerStackModule.id]: TowerStackModule,
 };
 
 export function getGameModule(id: string): GameModule {

@@ -364,3 +364,7 @@ h1, .page-title {
    its replay isn't inside these containers). */
 .public-replay .replay-flags,
 .replay-cell .replay-flags { display: none; }
+
+/* ---- tower stack canvas (vertical board) ---- */
+.st-canvas { width: min(420px, 92vw); aspect-ratio: 21/26;
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: 4px; }
