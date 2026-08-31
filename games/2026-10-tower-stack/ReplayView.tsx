@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReplayArtifact, InputEvent } from "../../shared/types";
 import {
   STEP_MS, MAX_STEPS, GRACE_STEPS,
-  buildStartPhases, bucketInputs, initState, stepState, rowPos, speedAt,
+  buildStartPhases, bucketInputs, initState, stepState, rowPos,
 } from "./sim";
 import { drawFrame } from "./Game";
 

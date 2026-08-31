@@ -179,7 +179,12 @@ export default function TowerStackGame({ seed, onInput, onReady, started, onComp
           doneRef.current = true;
           setDisplayScore(st.score);
           setDone(true);
-          onComplete({ endedAt: st.step * STEP_MS, reason: st.endReason || "timeout" });
+          onComplete({
+            endedAt: st.step * STEP_MS,
+            reason: st.endReason === "miss" ? "died"
+                  : st.endReason === "cap" ? "completed"
+                  : "timeout",
+          });
         }
         return;
       }
