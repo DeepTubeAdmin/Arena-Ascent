@@ -138,6 +138,12 @@ breaks determinism and fairness. All smoothness comes from rendering:
    (`frac = exactStep - st.step`, 0..1) and draw moving objects offset by
    `velocity × frac`. Interpolation is COSMETIC ONLY: it must never feed back
    into sim state, collision, or scoring. See Duck Run's `drawFrame(…, frac)`.
+   **Exception — never interpolate a discrete commit target.** If the player
+   commits to an object's position (a stacker row that freezes where it is, a
+   cursor that selects a cell), draw it at the sim's exact discrete position.
+   A smoothed in-between position shows an alignment the player cannot lock,
+   and they will "miss" while looking aligned. Interpolation is for things the
+   player reacts to, not things they commit to. (Tower Stack learned this.)
 
 2. **Never set React state per frame.** A `setState` inside the rAF loop
    forces a React render alongside every canvas frame — jank on weak machines.

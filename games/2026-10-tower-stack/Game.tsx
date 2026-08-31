@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameProps, InputEvent } from "../../shared/types";
 import {
   STEP_MS, MAX_STEPS, GRACE_STEPS, COLS, ROW_TIMEOUT_STEPS,
-  buildStartPhases, initState, stepState, rowPos, speedAt,
+  buildStartPhases, initState, stepState, rowPos, 
   type StackState,
 } from "./sim";
 
@@ -57,17 +57,18 @@ export function drawFrame(
     }
   });
 
-  // the moving row (interpolated between cells — cosmetic only)
+  // The moving row is drawn at the sim's EXACT discrete cell — no
+  // interpolation. In a stacker the drop resolves at the cell the sim holds,
+  // so a smoothed in-between position would show an alignment the player
+  // cannot actually lock. What you see is what you get.
+  void frac;
   if (st.alive && st.step >= GRACE_STEPS) {
     const sIn = st.step - st.rowStartStep;
     const pos = rowPos(st.level, st.width, phases[st.level], sIn);
-    const nxt = rowPos(st.level, st.width, phases[st.level], sIn + speedAt(st.level));
-    const within = ((sIn % speedAt(st.level)) + frac) / speedAt(st.level);
-    const x = pos + (nxt - pos) * Math.min(1, within);
     const y = rowY(st.level);
     ctx.fillStyle = "#e8e4d8";
     for (let c = 0; c < st.width; c++) {
-      ctx.fillRect(PAD + (x + c) * CELL + 1, y + 1, CELL - 4, CELL - 4);
+      ctx.fillRect(PAD + (pos + c) * CELL + 1, y + 1, CELL - 4, CELL - 4);
     }
     // shot clock (thin bar under the HUD): drains over ROW_TIMEOUT
     const left = Math.max(0, 1 - sIn / ROW_TIMEOUT_STEPS);
