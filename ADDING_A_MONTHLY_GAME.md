@@ -143,7 +143,12 @@ breaks determinism and fairness. All smoothness comes from rendering:
    cursor that selects a cell), draw it at the sim's exact discrete position.
    A smoothed in-between position shows an alignment the player cannot lock,
    and they will "miss" while looking aligned. Interpolation is for things the
-   player reacts to, not things they commit to. (Tower Stack learned this.)
+   player reacts to, not things they commit to. If you want smooth motion on
+   a commit target, make the SIM continuous (sub-cell positions in integer
+   milli-units) and snap on commit — then the renderer draws the real
+   position, and honesty and smoothness stop being in tension. Also timestamp
+   commit inputs to the most recently DRAWN sim step rather than the wall
+   clock, so what was on screen is exactly what locks. (Tower Stack does both.)
 
 2. **Never set React state per frame.** A `setState` inside the rAF loop
    forces a React render alongside every canvas frame — jank on weak machines.

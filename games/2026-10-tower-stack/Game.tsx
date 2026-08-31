@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameProps, InputEvent } from "../../shared/types";
 import {
   STEP_MS, MAX_STEPS, GRACE_STEPS, COLS, ROW_TIMEOUT_STEPS,
-  buildStartPhases, initState, stepState, rowPos, 
+  buildStartPhases, initState, stepState, rowPosMilli,
   type StackState,
 } from "./sim";
 
@@ -57,18 +57,18 @@ export function drawFrame(
     }
   });
 
-  // The moving row is drawn at the sim's EXACT discrete cell — no
-  // interpolation. In a stacker the drop resolves at the cell the sim holds,
-  // so a smoothed in-between position would show an alignment the player
-  // cannot actually lock. What you see is what you get.
+  // The moving row is drawn at the sim's REAL sub-cell position (the sim
+  // itself is continuous now). No frame interpolation: the drawn state is
+  // exactly the state a drop on this frame locks against (inputs are
+  // timestamped to the last drawn frame — see the input handler).
   void frac;
   if (st.alive && st.step >= GRACE_STEPS) {
     const sIn = st.step - st.rowStartStep;
-    const pos = rowPos(st.level, st.width, phases[st.level], sIn);
+    const xm = rowPosMilli(st.level, st.width, phases[st.level], sIn) / 1000;
     const y = rowY(st.level);
     ctx.fillStyle = "#e8e4d8";
     for (let c = 0; c < st.width; c++) {
-      ctx.fillRect(PAD + (pos + c) * CELL + 1, y + 1, CELL - 4, CELL - 4);
+      ctx.fillRect(PAD + (xm + c) * CELL + 1, y + 1, CELL - 4, CELL - 4);
     }
     // shot clock (thin bar under the HUD): drains over ROW_TIMEOUT
     const left = Math.max(0, 1 - sIn / ROW_TIMEOUT_STEPS);
@@ -125,6 +125,7 @@ export default function TowerStackGame({ seed, onInput, onReady, started, onComp
   const bufferRef = useRef<Map<number, InputEvent[]>>(new Map());
   const doneRef = useRef(false);
   const hudAtRef = useRef(0);
+  const drawnStepRef = useRef(0);   // sim step of the most recently DRAWN frame
 
   useEffect(() => {
     phasesRef.current = buildStartPhases(seed);
@@ -135,7 +136,10 @@ export default function TowerStackGame({ seed, onInput, onReady, started, onComp
   useEffect(() => {
     if (!started) return;
     function emit() {
-      const t = Math.max(0, performance.now() - startRef.current);
+      // Lock against the frame the player SAW, not the wall clock: the drop
+      // is timestamped to the most recently drawn sim step, so the on-screen
+      // position and the locked position are the same by construction.
+      const t = drawnStepRef.current * STEP_MS;
       const e: InputEvent = { t, type: "key", data: { action: "drop" } };
       onInput(e);
       const s = Math.floor(t / STEP_MS);
@@ -178,6 +182,7 @@ export default function TowerStackGame({ seed, onInput, onReady, started, onComp
           ? Math.ceil((GRACE_STEPS - st.step) * STEP_MS / 1000) : null;
         const frac = st.alive ? Math.min(1, Math.max(0, exactStep - st.step)) : 0;
         drawFrame(ctx, st, phasesRef.current, practiceLeft, frac);
+        drawnStepRef.current = st.step;
       }
       if (!st.alive || st.step >= MAX_STEPS) {
         if (!doneRef.current) {

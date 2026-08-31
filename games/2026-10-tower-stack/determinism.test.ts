@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  simulate, buildStartPhases, initState, stepState, rowPos, speedAt, capAt,
+  simulate, buildStartPhases, initState, stepState, rowPos, rowPosMilli, speedAt, capAt,
   GRACE_STEPS, STEP_MS, ROW_TIMEOUT_STEPS, COLS,
 } from "./sim";
 import type { InputEvent } from "../../shared/types";
@@ -119,12 +119,32 @@ describe("tower stack determinism", () => {
     expect(["miss", "timeout"]).toContain(final.endReason);
   });
 
-  it("board geometry sane", () => {
+  it("board geometry sane (snapped and sub-cell)", () => {
     const phases = buildStartPhases(SEED);
     for (let s = 0; s < 1000; s++) {
       const p = rowPos(0, 5, phases[0], s);
       expect(p).toBeGreaterThanOrEqual(0);
       expect(p + 5).toBeLessThanOrEqual(COLS);
+      const m = rowPosMilli(0, 5, phases[0], s);
+      expect(m).toBeGreaterThanOrEqual(0);
+      expect(m).toBeLessThanOrEqual((COLS - 5) * 1000);
     }
+  });
+
+  it("drop snaps to the nearest column: >=50% rounds over, <50% rounds back", () => {
+    // 10 steps per cell at level 0 → each step is 100 milli-cells.
+    const phases = buildStartPhases(SEED);
+    let found = false;
+    for (let s = 1; s < 400 && !found; s++) {
+      const m = rowPosMilli(0, 5, phases[0], s);
+      if (m % 1000 === 500) {
+        const cell = Math.floor(m / 1000);
+        expect(rowPos(0, 5, phases[0], s)).toBe(cell + 1);          // exactly 50% → rounds over
+        const mPrev = rowPosMilli(0, 5, phases[0], s - 1);
+        if (mPrev % 1000 === 400) expect(rowPos(0, 5, phases[0], s - 1)).toBe(cell); // 40% → stays
+        found = true;
+      }
+    }
+    expect(found).toBe(true);
   });
 });

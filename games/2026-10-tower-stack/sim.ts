@@ -50,15 +50,26 @@ export function buildStartPhases(seed: string): number[] {
   return phases;
 }
 
-/** Leftmost column of a `width`-wide row, `stepsInRow` steps after the row
-    started, ping-ponging across the board. Pure integer function. */
-export function rowPos(level: number, width: number, phase: number, stepsInRow: number): number {
-  const span = COLS - width;               // rightmost leftmost-position
+/** Row position in MILLI-CELLS (1000 = one column): the row moves smoothly,
+    `1000 / speedAt(level)` milli-cells per step, ping-ponging across the
+    board. Pure integer function of (level, width, phase, stepsInRow). */
+export function rowPosMilli(level: number, width: number, phase: number, stepsInRow: number): number {
+  const span = COLS - width;               // rightmost leftmost-position (cells)
   if (span <= 0) return 0;
-  const period = 2 * span;
-  const cell = (Math.floor(stepsInRow / speedAt(level)) + (phase % period)) % period;
-  return cell <= span ? cell : period - cell;
+  const periodM = 2 * span * 1000;
+  const traveled = Math.floor((stepsInRow * 1000) / speedAt(level));
+  const k = (traveled + (phase % (2 * span)) * 1000) % periodM;
+  return k <= span * 1000 ? k : periodM - k;
 }
+
+/** Where a drop LOCKS: the nearest whole column. 50% or more over a column
+    snaps to it; less than 50% snaps to the neighbour (either direction). */
+export function rowPosSnapped(level: number, width: number, phase: number, stepsInRow: number): number {
+  return Math.floor((rowPosMilli(level, width, phase, stepsInRow) + 500) / 1000);
+}
+
+/** Backwards-compatible alias used by tests/analysis: the snapped column. */
+export const rowPos = rowPosSnapped;
 
 export interface StackState {
   step: number;
@@ -95,7 +106,7 @@ export function bucketInputs(log: InputEvent[]): Map<number, InputEvent[]> {
 
 /** Resolve a drop (or shot-clock expiry) at the current step. */
 function resolveDrop(st: StackState, phases: number[]) {
-  const pos = rowPos(st.level, st.width, phases[st.level], st.step - st.rowStartStep);
+  const pos = rowPosSnapped(st.level, st.width, phases[st.level], st.step - st.rowStartStep);
   const lo = Math.max(pos, st.belowStart);
   const hi = Math.min(pos + st.width, st.belowStart + st.belowWidth);
   const overlap = Math.max(0, hi - lo);

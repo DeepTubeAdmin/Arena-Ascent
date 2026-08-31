@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReplayArtifact, InputEvent } from "../../shared/types";
 import {
   STEP_MS, MAX_STEPS, GRACE_STEPS,
-  buildStartPhases, bucketInputs, initState, stepState, rowPos,
+  buildStartPhases, bucketInputs, initState, stepState, rowPosSnapped, rowPosMilli,
 } from "./sim";
 import { drawFrame } from "./Game";
 
@@ -18,7 +18,8 @@ function analyze(artifact: ReplayArtifact) {
   // Re-simulate while recording, for each placement, how far the row was
   // from perfect alignment at the drop step (0 = dead center over support).
   const st = initState();
-  const offsets: number[] = [];
+  const offsets: number[] = [];   // |snapped col - support col| per drop (cells)
+  const subCell: number[] = [];   // distance from exact cell centre at drop (milli-cells)
   let preStart = 0;
   let prevLevel = 0;
   let prevRowStart = st.rowStartStep;
@@ -27,8 +28,11 @@ function analyze(artifact: ReplayArtifact) {
     for (const e of evs) {
       if (e.type !== "key" || (e.data as any)?.action !== "drop") continue;
       if (st.step < GRACE_STEPS || st.step < st.rowStartStep) { preStart++; continue; }
-      const pos = rowPos(st.level, st.width, phases[st.level], st.step - st.rowStartStep);
+      const sIn = st.step - st.rowStartStep;
+      const pos = rowPosSnapped(st.level, st.width, phases[st.level], sIn);
+      const m = rowPosMilli(st.level, st.width, phases[st.level], sIn);
       offsets.push(Math.abs(pos - st.belowStart));
+      subCell.push(Math.abs(m - pos * 1000));
     }
     stepState(st, phases, evs);
     if (st.level !== prevLevel) { prevLevel = st.level; prevRowStart = st.rowStartStep; }
@@ -43,6 +47,13 @@ function analyze(artifact: ReplayArtifact) {
   const flags: string[] = [];
   if (highRows.length >= 8 && perfectHigh === highRows.length) {
     flags.push(`Machine-perfect: ${perfectHigh} consecutive exact alignments at high rows`);
+  }
+  // Sub-cell precision: humans scatter across the snap window; a bot that
+  // fires at the exact centre every time shows near-zero spread.
+  if (subCell.length >= 12) {
+    const sc = subCell.slice(-12);
+    const worst = Math.max(...sc);
+    if (worst < 40) flags.push(`Sub-cell precision: last 12 drops all within ${worst} milli-cells of dead centre`);
   }
   if (preStart > 1) flags.push(`${preStart} drops before the row started moving`);
   return {

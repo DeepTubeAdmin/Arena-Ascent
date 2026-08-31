@@ -1,8 +1,15 @@
 # Tower Stack (2026-10)
 
 A tribute to the classic arcade stacker machines. One button: SPACE (or click)
-freezes the bouncing row over your stack. Blocks without support below are
+freezes the sliding row over your stack. Blocks without support below are
 chopped. Miss entirely and the run ends.
+
+**Motion and snapping.** The row slides continuously (sub-cell positions in
+the sim, integer milli-cells). On a drop it snaps to the nearest column: 50%
+or more over a column locks there; less than 50% locks on the neighbour, in
+either direction. Support is then checked per block on the whole-cell grid.
+Drops are timestamped to the most recently drawn frame, so the position on
+screen and the position that locks are identical by construction.
 
 - Board: 15 columns, 20 rows visible (camera follows the tower). Rows start
   5-wide; the cap loses one block every 10 rows (5/4/3/2/1 at rows 1/11/21/
