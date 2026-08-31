@@ -9,9 +9,11 @@ import { api } from "../lib/api";
 // ---- monthly game registry (frontend side) ----
 import TargetRushGame from "../../../games/2026-08-target-rush/Game";
 import TwistedSystemGame from "../../../games/2026-09-duck-run/Game";
+import TowerStackGame from "../../../games/2026-10-tower-stack/Game";
 const GAME_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "2026-08-target-rush": TargetRushGame,
   "2026-09-duck-run": TwistedSystemGame,
+  "2026-10-tower-stack": TowerStackGame,
 };
 
 type Phase = "lobby" | "loading" | "ready" | "playing" | "submitted" | "spectating" | "error";

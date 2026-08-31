@@ -251,7 +251,8 @@ function RegisterRoundForm({ onChanged }: { onChanged: () => void }) {
       <input placeholder="on-chain round id" value={roundId} onChange={(e) => setRoundId(e.target.value)} />
       <select value={gameId} onChange={(e) => setGameId(e.target.value)}>
         <option value="2026-08-target-rush">Target Rush (2026-08)</option>
-        <option value="2026-09-duck-run">Twisted System (2026-09)</option>
+        <option value="2026-09-duck-run">Duck Run (2026-09)</option>
+        <option value="2026-10-tower-stack">Tower Stack (2026-10)</option>
         <option value="stub">Stub (pipeline test)</option>
       </select>
       <input type="datetime-local" value={liveStart} onChange={(e) => setLiveStart(e.target.value)} />
