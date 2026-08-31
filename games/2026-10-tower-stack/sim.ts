@@ -1,10 +1,9 @@
 // Tower Stack — deterministic simulation core (2026-10).
 // A tribute to the classic arcade stacker machines: a row of blocks bounces
-// across a 7-column board; press to freeze it; blocks without support below
-// are chopped off; miss entirely and the run ends. Width narrows as you
-// climb (3-wide, then 2 at level 4, then 1 at level 10), speed compounds
-// every row, and unlike the arcade there is no top: the tower continues
-// until skill runs out (~row 40 is beyond human timing).
+// across a 15-column board; press to freeze it; blocks without support below
+// are chopped off; miss entirely and the run ends. The row starts 5 wide and
+// loses a block every 10 levels; speed compounds every row; unlike the arcade
+// there is no top — the tower continues until skill runs out.
 //
 // ONE shared seed per round: identical motion pattern for every player.
 // Integer math only; same inputs → same result, always.
@@ -14,24 +13,25 @@ import type { InputEvent } from "../../shared/types";
 
 export const STEP_MS = 16;
 export const MAX_STEPS = 22500;          // 6-minute hard cap
-export const GRACE_STEPS = 375;          // 6s: instructions, row parked
-export const COLS = 7;                   // board width (classic LED layout)
+export const GRACE_STEPS = 1875;         // 30s: read the instructions, row parked
+export const COLS = 15;                  // board width
 export const MAX_LEVELS = 60;            // structural cap (unreachable)
-export const ROW_TIMEOUT_STEPS = 500;    // 8s shot clock per row — hesitation ends the run
+export const ROW_TIMEOUT_STEPS = 625;    // 10s shot clock per row — hesitation ends the run
 
-/** Width cap by level: 3-wide (levels 0-2), 2-wide (3-8), 1-wide (9+). */
+/** Width cap by level: 5-wide to start, one block narrower every 10 levels
+    (5 / 4 / 3 / 2 / 1 at levels 0 / 10 / 20 / 30 / 40+). */
 export function capAt(level: number): number {
-  return level < 3 ? 3 : level < 9 ? 2 : 1;
+  return Math.max(1, 5 - Math.floor(level / 10));
 }
 
-/** Steps per one-column move, by level: 10 (160ms) shrinking ~7%/row to a
-    floor of 2 (32ms/column — inhuman with a 1-wide block). Integer table. */
+/** Steps per one-column move, by level: 10 (160ms) shrinking 5%/row to a
+    floor of 2 (32ms/column, reached ~level 32). Integer table. */
 export function buildSpeeds(): number[] {
   const out: number[] = [];
   let milli = 10000;
   for (let i = 0; i < MAX_LEVELS + 1; i++) {
     out.push(Math.max(2, Math.floor(milli / 1000)));
-    milli = Math.floor((milli * 93) / 100);
+    milli = Math.floor((milli * 95) / 100);
   }
   return out;
 }
@@ -110,8 +110,8 @@ function resolveDrop(st: StackState, phases: number[]) {
   // Placement pay scales hard with height: late rows are worth many times
   // early ones, so surviving the speed ramp is what wins.
   st.score += overlap * (25 + st.level * 12);
-  if (st.level === 10) st.score += 500;    // "minor prize" line (row 11)
-  if (st.level === 14) st.score += 2000;   // "major prize" line (row 15)
+  if (st.level === 19) st.score += 500;    // MINOR line (row 20)
+  if (st.level === 39) st.score += 2000;   // MAJOR line (row 40)
 
   st.level++;
   if (st.level >= MAX_LEVELS) { st.alive = false; st.endReason = "cap"; return; }

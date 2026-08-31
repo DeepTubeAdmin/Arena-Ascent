@@ -37,12 +37,12 @@ function analyze(artifact: ReplayArtifact) {
 
   const n = offsets.length;
   const mean = n ? offsets.reduce((a, b) => a + b, 0) / n : 0;
-  const highRows = offsets.slice(9); // 1-wide territory
+  const highRows = offsets.slice(30); // 2-wide and 1-wide territory
   const perfectHigh = highRows.filter((o) => o === 0).length;
 
   const flags: string[] = [];
   if (highRows.length >= 8 && perfectHigh === highRows.length) {
-    flags.push(`Machine-perfect: ${perfectHigh} consecutive exact alignments at 1-wide speeds`);
+    flags.push(`Machine-perfect: ${perfectHigh} consecutive exact alignments at high rows`);
   }
   if (preStart > 1) flags.push(`${preStart} drops before the row started moving`);
   return {
@@ -91,7 +91,7 @@ export default function TowerStackReplay({ artifact }: { artifact: ReplayArtifac
           analysis.flags.map((f: string) => <span key={f} className="flag bad">⚠ {f}</span>)
         )}
       </div>
-      <canvas ref={canvasRef} width={420} height={520} className="replay-canvas st-canvas" />
+      <canvas ref={canvasRef} width={450} height={670} className="replay-canvas st-canvas" />
       <div className="replay-controls">
         <button onClick={() => setPlaying((p: boolean) => !p)}>{playing ? "Pause" : "Play"}</button>
         <input type="range" min={0} max={analysis.endStep} value={step}

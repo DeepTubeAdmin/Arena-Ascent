@@ -10,9 +10,9 @@ import {
   type StackState,
 } from "./sim";
 
-const W = 420, H = 520;
-const CELL = 52, PAD = (W - COLS * CELL) / 2;
-const VISIBLE_ROWS = 9;
+const W = 450, H = 670;
+const CELL = 28, PAD = (W - COLS * CELL) / 2;
+const VISIBLE_ROWS = 20;
 
 export function drawFrame(
   ctx: CanvasRenderingContext2D, st: StackState, phases: number[],
@@ -23,20 +23,20 @@ export function drawFrame(
   ctx.fillRect(0, 0, W, H);
 
   // camera: keep the active row near the middle once the tower grows
-  const camBase = Math.max(0, st.level - 5);
+  const camBase = Math.max(0, st.level - 14);
 
-  const rowY = (level: number) => H - 60 - (level - camBase) * (CELL + 4);
+  const rowY = (level: number) => H - 50 - (level - camBase) * (CELL + 2);
 
   // grid dots for visible board
   ctx.fillStyle = "#1c1f2e";
   for (let r = 0; r < VISIBLE_ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      ctx.fillRect(PAD + c * CELL + 2, rowY(camBase + r) + 2, CELL - 8, CELL - 8);
+      ctx.fillRect(PAD + c * CELL + 1, rowY(camBase + r) + 1, CELL - 4, CELL - 4);
     }
   }
 
   // milestone lines (rows 11 and 15, i.e. levels 10 and 14)
-  for (const [lvl, name] of [[10, "MINOR"], [14, "MAJOR"]] as [number, string][]) {
+  for (const [lvl, name] of [[19, "MINOR"], [39, "MAJOR"]] as [number, string][]) {
     const y = rowY(lvl);
     if (y > 20 && y < H - 10) {
       ctx.strokeStyle = "#3a3d52";
@@ -53,7 +53,7 @@ export function drawFrame(
     const y = rowY(lvl);
     if (y < -CELL || y > H) return;
     for (let c = 0; c < p.width; c++) {
-      ctx.fillRect(PAD + (p.start + c) * CELL + 2, y + 2, CELL - 8, CELL - 8);
+      ctx.fillRect(PAD + (p.start + c) * CELL + 1, y + 1, CELL - 4, CELL - 4);
     }
   });
 
@@ -67,7 +67,7 @@ export function drawFrame(
     const y = rowY(st.level);
     ctx.fillStyle = "#e8e4d8";
     for (let c = 0; c < st.width; c++) {
-      ctx.fillRect(PAD + (x + c) * CELL + 2, y + 2, CELL - 8, CELL - 8);
+      ctx.fillRect(PAD + (x + c) * CELL + 1, y + 1, CELL - 4, CELL - 4);
     }
     // shot clock (thin bar under the HUD): drains over ROW_TIMEOUT
     const left = Math.max(0, 1 - sIn / ROW_TIMEOUT_STEPS);
@@ -90,11 +90,15 @@ export function drawFrame(
     ctx.fillStyle = "#9bb489";
     ctx.font = "22px VT323, monospace";
     ctx.textAlign = "center";
-    ctx.fillText(`GET READY — first row moves in ${practiceLeftS}s`, W / 2, 90);
-    ctx.font = "16px VT323, monospace";
-    ctx.fillText("SPACE freezes the row over the blocks below.", W / 2, 118);
-    ctx.fillText("Overhanging blocks get chopped. Miss = over.", W / 2, 140);
-    ctx.fillText("Don't stall — each row has a shot clock.", W / 2, 162);
+    ctx.fillText(`READ THIS — first row moves in ${practiceLeftS}s`, W / 2, 110);
+    ctx.font = "17px VT323, monospace";
+    ctx.fillText("A row of blocks slides back and forth.", W / 2, 150);
+    ctx.fillText("Press SPACE (or click) to freeze it in place.", W / 2, 174);
+    ctx.fillText("Blocks hanging past the row below are chopped off.", W / 2, 198);
+    ctx.fillText("Miss the stack completely and your run is over.", W / 2, 222);
+    ctx.fillText("Rows speed up as you climb; the stack narrows every 10 rows.", W / 2, 246);
+    ctx.fillText("Higher rows are worth far more points.", W / 2, 270);
+    ctx.fillText("Don't stall: each row has a 10-second shot clock.", W / 2, 294);
     ctx.textAlign = "left";
   }
   if (!st.alive) {

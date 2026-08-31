@@ -366,5 +366,5 @@ h1, .page-title {
 .replay-cell .replay-flags { display: none; }
 
 /* ---- tower stack canvas (vertical board) ---- */
-.st-canvas { width: min(420px, 92vw); aspect-ratio: 21/26;
+.st-canvas { width: min(450px, 92vw); aspect-ratio: 45/67;
   background: var(--panel); border: 1px solid var(--line-strong); border-radius: 4px; }

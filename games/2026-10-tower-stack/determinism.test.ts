@@ -63,10 +63,18 @@ describe("tower stack determinism", () => {
     expect(b.score).toBeGreaterThan(a.score);
   });
 
-  it("width caps follow the arcade progression", () => {
-    expect(capAt(0)).toBe(3);
-    expect(capAt(3)).toBe(2);
-    expect(capAt(9)).toBe(1);
+  it("width starts at 5 and drops one block every 10 levels", () => {
+    expect(capAt(0)).toBe(5);
+    expect(capAt(9)).toBe(5);
+    expect(capAt(10)).toBe(4);
+    expect(capAt(20)).toBe(3);
+    expect(capAt(30)).toBe(2);
+    expect(capAt(40)).toBe(1);
+    expect(capAt(59)).toBe(1);
+  });
+
+  it("30-second instruction grace before any motion", () => {
+    expect(GRACE_STEPS).toBe(1875);
   });
 
   it("speed strictly tightens to the floor", () => {
@@ -77,7 +85,7 @@ describe("tower stack determinism", () => {
       expect(v).toBeGreaterThanOrEqual(2);
       prev = v;
     }
-    expect(speedAt(30)).toBe(2);
+    expect(speedAt(40)).toBe(2);
   });
 
   it("a deliberate full miss ends the run", () => {
@@ -113,10 +121,10 @@ describe("tower stack determinism", () => {
 
   it("board geometry sane", () => {
     const phases = buildStartPhases(SEED);
-    for (let s = 0; s < 500; s++) {
-      const p = rowPos(0, 3, phases[0], s);
+    for (let s = 0; s < 1000; s++) {
+      const p = rowPos(0, 5, phases[0], s);
       expect(p).toBeGreaterThanOrEqual(0);
-      expect(p + 3).toBeLessThanOrEqual(COLS);
+      expect(p + 5).toBeLessThanOrEqual(COLS);
     }
   });
 });

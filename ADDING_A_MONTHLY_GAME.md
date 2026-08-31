@@ -89,6 +89,41 @@ legal-posture requirements, not suggestions.
 
 ---
 
+## Instruction grace — 30 seconds (mandatory)
+
+Every game opens with a **30-second instruction period** (`GRACE_STEPS = 1875`
+at 16ms steps) before any gameplay motion begins. During it the game draws its
+own instructions on the canvas — controls, the core rule, what ends the run,
+what scores — with the countdown to the first moving element visible. Inputs
+during the grace are ignored by the sim. Players see a game for the first time
+ever in a live tournament; six seconds proved far too short. The 30s comes out
+of the game's own time budget (still ≤10 minutes total).
+
+## Sim-freeze rule (mandatory)
+
+Once a real (production) round has settled on a game, that game's simulation
+is frozen history: replays are re-interpreted from (seed, inputs) by the
+CURRENT sim, so any change to timing, grace, speeds, spacing, or scoring
+silently rewrites every past champion's recorded run. Balance changes belong
+to the NEXT month's game, never to a game with settled production rounds.
+(This is why Duck Run keeps its original 6-second grace.)
+
+## Registration checklist (all four, verified, before packaging)
+
+A new game must be registered in exactly four places — miss one and the game
+half-exists (in the dropdown but unplayable, or playable but unreviewable):
+
+1. `backend/src/games/registry.ts` — import + map entry (scoring)
+2. `frontend/src/components/GameShell.tsx` — import + `GAME_COMPONENTS` entry (play)
+3. `frontend/src/lib/replays.ts` — import + `REPLAY_VIEWS` entry (review + public replay)
+4. `frontend/src/admin/AdminPage.tsx` — `<option>` in the game dropdown (registration)
+
+Verify with `grep -c "<game-id>"` on all four files before packaging. When
+editing by script, ASSERT every replacement matched — a silent no-op is how
+two of four registrations were missed once. Then verify the module's values
+against `shared/types.ts` contracts (e.g. `RunSummary.reason` is a fixed
+union: map game-specific end reasons onto it), not just that imports resolve.
+
 ## Performance requirements (mandatory — every game, every device)
 
 The sim is sacred; the renderer does the smoothing. NEVER adapt physics,
