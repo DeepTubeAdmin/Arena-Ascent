@@ -24,11 +24,12 @@ export function capAt(level: number): number {
   return Math.max(1, 5 - Math.floor(level / 10));
 }
 
-/** Steps per one-column move, by level: 10 (160ms) shrinking 5%/row to a
-    floor of 2 (32ms/column, reached ~level 32). Integer table. */
+/** Steps per one-column move, by level: 16 (256ms — a deliberate, readable
+    opening pace) shrinking 5%/row to a floor of 2 (32ms/column, reached at
+    row 34). Integer table. */
 export function buildSpeeds(): number[] {
   const out: number[] = [];
-  let milli = 10000;
+  let milli = 16000;
   for (let i = 0; i < MAX_LEVELS + 1; i++) {
     out.push(Math.max(2, Math.floor(milli / 1000)));
     milli = Math.floor((milli * 95) / 100);
